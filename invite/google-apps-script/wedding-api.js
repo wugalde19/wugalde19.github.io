@@ -399,4 +399,117 @@ function onOpen() {
   ui.createMenu('Wedding App')
       .addItem('Setup Sheets', 'setupSheets')
       .addToUi();
+}
+
+/**
+ * Generate a secure ID for an invitee
+ * @param {string} name - The invitee's name
+ * @returns {string} - A secure, encoded ID
+ */
+function generateSecureId(name) {
+  const timestamp = new Date().getTime();
+  const randomPart = Math.random().toString(36).substring(2, 8);
+  const namePart = name.toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 6);
+  const rawId = `${timestamp}-${namePart}-${randomPart}`;
+  
+  // Base64 encode and make URL safe
+  return Utilities.base64EncodeWebSafe(rawId)
+    .replace(/=+$/, ''); // Remove trailing equals
+}
+
+/**
+ * Create a new invitee
+ * @param {Object} e - The event object from the form submission
+ * @returns {Object} - Response object with status and message
+ */
+function createInvitee(e) {
+  try {
+    const name = e.parameter.name;
+    const maxGuests = parseInt(e.parameter.maxGuests);
+    const email = e.parameter.email || '';
+    const notes = e.parameter.notes || '';
+    
+    if (!name || !maxGuests) {
+      return {
+        status: 'error',
+        message: 'Name and maximum guests are required'
+      };
+    }
+    
+    const sheet = SpreadsheetApp.getActive().getSheetByName('Invitees');
+    if (!sheet) {
+      setupSheets();
+    }
+    
+    const id = generateSecureId(name);
+    const dateAdded = new Date().toISOString();
+    
+    // Add new row
+    sheet.appendRow([
+      id,
+      name,
+      maxGuests,
+      email,
+      notes,
+      dateAdded,
+      'pending' // Initial status
+    ]);
+    
+    return {
+      status: 'success',
+      message: 'Invitee created successfully',
+      data: {
+        id,
+        name,
+        maxGuests,
+        email,
+        notes,
+        dateAdded,
+        status: 'pending'
+      }
+    };
+  } catch (error) {
+    console.error('Error creating invitee:', error);
+    return {
+      status: 'error',
+      message: 'Failed to create invitee'
+    };
+  }
+}
+
+/**
+ * Get all invitees
+ * @returns {Object} - Response object with status and invitees data
+ */
+function getAllInvitees() {
+  try {
+    const sheet = SpreadsheetApp.getActive().getSheetByName('Invitees');
+    if (!sheet) {
+      return {
+        status: 'error',
+        message: 'Invitees sheet not found'
+      };
+    }
+    
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    const invitees = data.slice(1).map(row => {
+      const invitee = {};
+      headers.forEach((header, index) => {
+        invitee[header.toLowerCase()] = row[index];
+      });
+      return invitee;
+    });
+    
+    return {
+      status: 'success',
+      data: invitees
+    };
+  } catch (error) {
+    console.error('Error getting invitees:', error);
+    return {
+      status: 'error',
+      message: 'Failed to get invitees'
+    };
+  }
 } 

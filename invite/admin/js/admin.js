@@ -1,7 +1,7 @@
 // API configuration - should match what's in the main site's api.js
 const API_CONFIG = {
     // Google Apps Script deployed as web app URL
-    baseUrl: 'https://script.google.com/macros/s/AKfycbzT7KkU1rzTCB7nGwGXjwC2maVpo--K7234EgXT4KoDh3s_f_0q0F7-cZyTmMkVUoVG/exec',
+    baseUrl: 'https://script.google.com/macros/s/AKfycbyrxYiQOoOqV3VLiGsuM1EaqxiMxu4c1omm7EIPoKl8S3qTU7bH3kffBepGdawAqTY/exec',
     
     // Sheets IDs
     sheetsIds: {
@@ -187,34 +187,20 @@ function loadSettings() {
 function loadInvitees() {
     showLoadingMessage('inviteesTable', 'Cargando invitados...');
     
-    // In a real implementation, this would make an API call to get invitees
-    // For demonstration purposes, we'll use mock data
-    setTimeout(() => {
-        // Mock data
-        inviteesData = [
-            { id: '1', name: 'Familia García', maxGuests: 4, email: 'garcia@example.com', confirmed: true },
-            { id: '2', name: 'Familia Rodríguez', maxGuests: 3, email: 'rodriguez@example.com', confirmed: false },
-            { id: '3', name: 'Juan Pérez', maxGuests: 2, email: 'juan@example.com', confirmed: false },
-            { id: '4', name: 'María López', maxGuests: 2, email: 'maria@example.com', confirmed: true },
-            { id: '5', name: 'Carlos Sánchez', maxGuests: 1, email: 'carlos@example.com', confirmed: false }
-        ];
-        
-        renderInviteesTable();
-    }, 500);
-    
-    /* 
-    // Real implementation would look like this:
-    fetch(`${API_CONFIG.baseUrl}?action=getInvitees&sheetId=${API_CONFIG.sheetsIds.invitees}`)
-        .then(response => response.json())
-        .then(data => {
-            inviteesData = data;
-            renderInviteesTable();
+    // Use JSONP to fetch invitees
+    fetchJsonp(`${API_CONFIG.baseUrl}?action=getAllInvitees`)
+        .then(result => {
+            if (result.status === 'success') {
+                inviteesData = result.data;
+                renderInviteesTable();
+            } else {
+                throw new Error(result.message || 'Failed to load invitees');
+            }
         })
         .catch(error => {
             console.error('Error loading invitees:', error);
             showErrorMessage('inviteesTable', 'Error al cargar invitados. Por favor, intenta nuevamente.');
         });
-    */
 }
 
 /**
@@ -373,39 +359,85 @@ function saveInvitee(e) {
     const maxGuests = parseInt(document.getElementById('inviteeGuests').value);
     const notes = document.getElementById('inviteeNotes').value;
     
-    // In a real implementation, this would make an API call to save the invitee
-    if (inviteeId) {
-        // Update existing invitee
-        const index = inviteesData.findIndex(inv => inv.id === inviteeId);
-        
-        if (index !== -1) {
-            inviteesData[index] = {
-                ...inviteesData[index],
-                name,
-                email,
-                maxGuests,
-                notes
-            };
+    // Show loading state
+    const submitButton = e.target.querySelector('button[type="submit"]');
+    const originalText = submitButton.textContent;
+    submitButton.disabled = true;
+    submitButton.textContent = 'Guardando...';
+    
+    // Prepare the data
+    const data = {
+        action: 'createInvitee',
+        name,
+        maxGuests,
+        email,
+        notes
+    };
+    
+    // Create a form to submit the data
+    const form = document.createElement('form');
+    form.setAttribute('method', 'post');
+    form.setAttribute('action', API_CONFIG.baseUrl);
+    form.setAttribute('target', 'submitFrame');
+    
+    // Add all data parameters as hidden inputs
+    Object.entries(data).forEach(([key, value]) => {
+        const input = document.createElement('input');
+        input.setAttribute('type', 'hidden');
+        input.setAttribute('name', key);
+        input.setAttribute('value', value);
+        form.appendChild(input);
+    });
+    
+    // Create hidden iframe for submission
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute('name', 'submitFrame');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    
+    // Handle response
+    iframe.onload = function() {
+        try {
+            // Reset form and close modal
+            e.target.reset();
+            closeInviteeModal();
+            
+            // Reload invitees list
+            loadInvitees();
+            
+            // Show success message
+            showSuccessMessage('inviteesTable', 'Invitado agregado exitosamente');
+        } catch (error) {
+            console.error('Error saving invitee:', error);
+            showErrorMessage('inviteesTable', 'Error al guardar invitado. Por favor, intenta nuevamente.');
+        } finally {
+            // Reset button state
+            submitButton.disabled = false;
+            submitButton.textContent = originalText;
+            
+            // Clean up
+            document.body.removeChild(iframe);
+            document.body.removeChild(form);
         }
-    } else {
-        // Add new invitee
-        const newId = (Math.max(...inviteesData.map(inv => parseInt(inv.id))) + 1).toString();
+    };
+    
+    // Handle errors
+    iframe.onerror = function() {
+        console.error('Error submitting form');
+        showErrorMessage('inviteesTable', 'Error al guardar invitado. Por favor, intenta nuevamente.');
         
-        inviteesData.push({
-            id: newId,
-            name,
-            email,
-            maxGuests,
-            notes,
-            confirmed: false
-        });
-    }
+        // Reset button state
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
+        
+        // Clean up
+        document.body.removeChild(iframe);
+        document.body.removeChild(form);
+    };
     
-    // Close modal
-    closeInviteeModal();
-    
-    // Render updated table
-    renderInviteesTable();
+    // Add form to document and submit
+    document.body.appendChild(form);
+    form.submit();
 }
 
 /**
