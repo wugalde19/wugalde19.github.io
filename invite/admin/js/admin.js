@@ -1,7 +1,7 @@
 // API configuration - should match what's in the main site's api.js
 const API_CONFIG = {
     // Google Apps Script deployed as web app URL
-    baseUrl: 'https://script.google.com/macros/s/AKfycbz6DUpib9sKr4Tmbi3ftJXayfiHarSZ-c4jdfr6zluVuxNbWN6v4H_D2aueLA1CDM-V/exec',
+    baseUrl: 'https://script.google.com/macros/s/AKfycbzwgbg8R-CXaouRusPVd2le7OC3iqz2CC_Fm4jZQB7bTLVikZApb_wGF4iQqk0BgMuT/exec',
     
     // Sheets IDs
     sheetsIds: {
@@ -416,6 +416,10 @@ function saveInvitee(e) {
                     const response = JSON.parse(responseText);
                     
                     if (response.status === 'success') {
+                        // Use backend-generated ID and invitation link
+                        const backendId = response.data.id;
+                        const backendInvitationLink = response.data.invitationLink;
+                        
                         // Reset form and close modal
                         e.target.reset();
                         closeInviteeModal();
@@ -424,7 +428,7 @@ function saveInvitee(e) {
                         loadInvitees();
                         
                         // Show success message
-                        showSuccessMessage('inviteesTable', 'Invitado agregado exitosamente');
+                        showSuccessMessage('inviteesTable', 'Invitado agregado exitosamente. Enlace: ' + backendInvitationLink);
                     } else {
                         // Show error message
                         console.error('Error from API:', response);
@@ -574,4 +578,14 @@ function showLoadingMessage(tableId, message) {
 function showErrorMessage(tableId, message) {
     const tbody = document.querySelector(`#${tableId} tbody`);
     tbody.innerHTML = `<tr><td colspan="6" class="loading-message" style="color: var(--danger-color);">${message}</td></tr>`;
-} 
+}
+
+/**
+ * Show success message in a table
+ * @param {string} tableId - The table ID
+ * @param {string} message - The success message
+ */
+function showSuccessMessage(tableId, message) {
+    const tbody = document.querySelector(`#${tableId} tbody`);
+    tbody.innerHTML = `<tr><td colspan="6" class="loading-message" style="color: var(--success-color);">${message}</td></tr>`;
+}

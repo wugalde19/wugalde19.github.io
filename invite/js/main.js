@@ -135,6 +135,8 @@ function updateInviteeUI(data) {
     // Update guest counts
     document.getElementById('ceremonyGuestCount').textContent = data.maxGuests;
     document.getElementById('celebrationGuestCount').textContent = data.maxGuests;
+    document.getElementById('ceremonyGuestName').textContent = data.name;
+    document.getElementById('celebrationGuestName').textContent = data.name;
     
     // Populate attending count dropdowns
     const ceremonySelect = document.getElementById('ceremonyAttendingCount');

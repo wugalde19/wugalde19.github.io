@@ -68,37 +68,11 @@ function doGet(e) {
 
 // Handle POST requests (for form submissions)
 function doPost(e) {
-  // Parse the request parameters and payload
-  let params, data;
+  Logger.log('doPost called, e: ' + JSON.stringify(e));
+  // Always extract data from e.parameter for form submissions
+  let data = e.parameter;
+  let params = e.parameter;
   const callback = e.parameter.callback; // For JSONP support
-  
-  try {
-    // Check if data is coming from form submit or JSON payload
-    if (e.postData && e.postData.contents) {
-      // Handle JSON data
-      data = JSON.parse(e.postData.contents);
-      params = e.parameter;
-    } else {
-      // Handle form-submitted data
-      data = e.parameter;
-      params = e.parameter;
-    }
-  } catch (err) {
-    const errorContent = JSON.stringify({
-      status: "error",
-      message: "Invalid data format: " + err.message
-    });
-    
-    // Handle JSONP if callback is provided
-    if (callback) {
-      return ContentService.createTextOutput(callback + "(" + errorContent + ")")
-        .setMimeType(ContentService.MimeType.JAVASCRIPT);
-    } else {
-      // Normal JSON response with CORS headers (ContentService does not support setHeader, so only set MIME type)
-      return ContentService.createTextOutput(errorContent)
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-  }
   
   const action = data.action || params.action;
   let content;
@@ -419,9 +393,9 @@ function createInviteeJson(data) {
     
     Logger.log("Successfully accessed Invitees sheet");
     
-    // Generate a secure ID
-    const id = generateSecureId(name);
-    Logger.log("Generated secure ID: " + id);
+    // Use provided inviteeId if present, otherwise generate a new one
+    const id = data.inviteeId ? String(data.inviteeId).trim() : generateSecureId(name);
+    Logger.log("Using inviteeId: " + id);
     
     // Generate current date
     const dateAdded = new Date().toISOString();
@@ -477,8 +451,8 @@ function createInviteeJson(data) {
     // Generate the invitation link for the response
     const invitationLink = "https://wugalde19.github.io/invite/invitation.html?id=" + id;
     Logger.log("Invitation link generated: " + invitationLink);
-    
-    return JSON.stringify({
+
+    const response = {
       status: "success",
       data: { 
         id,
@@ -491,7 +465,9 @@ function createInviteeJson(data) {
         invitationLink // Include the invitation link in the response
       },
       message: "Invitee created successfully"
-    });
+    };
+    
+    return JSON.stringify(response);
   } catch(error) {
     Logger.log("Error creating invitee: " + error.toString() + "\nStack: " + error.stack);
     return JSON.stringify({

@@ -76,7 +76,7 @@
             <div class="event-details">
                 <div class="detail-item">
                     <h3>Día</h3>
-                    <p>Sábado 15 de Mayo - 17hs</p>
+                    <p>Lunes 15 de Septiembre - 2:00pm</p>
                     <button class="btn btn-small" onclick="addToCalendar('ceremony')">Agendar</button>
                 </div>
                 <div class="detail-item">
@@ -107,7 +107,7 @@
             <div class="event-details">
                 <div class="detail-item">
                     <h3>Día</h3>
-                    <p>Sábado 15 de Mayo - 20hs</p>
+                    <p>Lunes 15 de Septiembre - 3:30pm</p>
                     <button class="btn btn-small" onclick="addToCalendar('celebration')">Agendar</button>
                 </div>
                 <div class="detail-item">
@@ -269,7 +269,7 @@
                 <input type="hidden" id="ceremonyEventType" name="eventType" value="ceremony">
                 
                 <div class="form-group">
-                    <p>Confirmas tu asistencia para <span id="ceremonyGuestCount">0</span> personas?</p>
+                    <p>Hemos reservado <span id="ceremonyGuestCount">0</span> campos para <span id="ceremonyGuestName"></span>  para la ceremonia. ¿Confirmas tu asistencia?</p>
                     <div class="attendance-selector">
                         <button type="button" class="btn btn-primary" onclick="confirmAttendance('ceremony', true)">¡Sí, confirmo!</button>
                         <button type="button" class="btn btn-secondary" onclick="confirmAttendance('ceremony', false)">No puedo :(</button>
@@ -303,7 +303,7 @@
                 <input type="hidden" id="celebrationEventType" name="eventType" value="celebration">
                 
                 <div class="form-group">
-                    <p>Confirmas tu asistencia para <span id="celebrationGuestCount">0</span> personas?</p>
+                    <p>Hemos reservado <span id="celebrationGuestCount">0</span> campos para <span id="celebrationGuestName"></span>  para la celebración. ¿Confirmas tu asistencia?</p>
                     <div class="attendance-selector">
                         <button type="button" class="btn btn-primary" onclick="confirmAttendance('celebration', true)">¡Sí, confirmo!</button>
                         <button type="button" class="btn btn-secondary" onclick="confirmAttendance('celebration', false)">No puedo :(</button>
@@ -380,7 +380,7 @@
                     <li>Habrá estacionamiento disponible en ambas locaciones.</li>
                     <li>Si necesitas alojamiento, tenemos convenios con hoteles cercanos. Consultanos para más información.</li>
                     <li>El servicio de transporte entre la ceremonia y la celebración estará disponible desde las 18:30hs.</li>
-                    <li>Si tienes alguna restricción alimentaria, por favor háganoslo saber antes del 1 de Mayo.</li>
+                    <li>Si tienes alguna restricción alimentaria, por favor háganoslo saber antes del 1 de Septiembre.</li>
                 </ul>
             </div>
         </div>
@@ -492,7 +492,7 @@
          */
         const API_CONFIG = {
             // Google Apps Script deployed as web app URL
-            baseUrl: 'https://script.google.com/macros/s/AKfycbz6DUpib9sKr4Tmbi3ftJXayfiHarSZ-c4jdfr6zluVuxNbWN6v4H_D2aueLA1CDM-V/exec',
+            baseUrl: 'https://script.google.com/macros/s/AKfycbzwgbg8R-CXaouRusPVd2le7OC3iqz2CC_Fm4jZQB7bTLVikZApb_wGF4iQqk0BgMuT/exec',
             
             // Sheets IDs
             sheetsIds: {
@@ -729,7 +729,7 @@
         }
 
         // Wedding date - Update this to your actual wedding date
-        const weddingDate = new Date('2025-05-15T17:00:00');
+        const weddingDate = new Date('2025-09-15T14:00:00');
         
         function updateCountdown() {
             const now = new Date();
@@ -792,15 +792,22 @@
                         // Update confirmation modals with max guests
                         updateGuestCountOptions('ceremony', maxGuests);
                         updateGuestCountOptions('celebration', maxGuests);
+                        const inviteeName = inviteeData.name;
                         
                         // Show guest count in confirmation text
                         document.getElementById('ceremonyGuestCount').textContent = maxGuests;
+                        document.getElementById('ceremonyGuestName').textContent = inviteeName;
                         document.getElementById('celebrationGuestCount').textContent = maxGuests;
+                        document.getElementById('celebrationGuestName').textContent = inviteeName;
                         
                         // Set invitee IDs in forms
                         document.getElementById('ceremonyInviteeId').value = inviteeId;
-                        document.getElementById('celebrationInviteeId').value = inviteeId;
-                        document.getElementById('musicInviteeId').value = inviteeId;
+                        
+                        // document.getElementById('celebrationInviteeId').value = inviteeId;
+                        document.getElementById('celebrationInviteeId').value = inviteeName;
+                        
+                        // document.getElementById('musicInviteeId').value = inviteeId;
+                        document.getElementById('musicInviteeId').value = inviteeName;
                     } else {
                         throw new Error('Invalid invitation ID format');
                     }
@@ -986,14 +993,14 @@
             const eventDetails = {
                 ceremony: {
                     title: 'Ceremonia de Boda - Danny & Sofía',
-                    startTime: '2025-05-15T17:00:00',
-                    endTime: '2025-05-15T18:30:00',
+                    startTime: '2025-09-15T14:00:00',
+                    endTime: '2025-09-15T15:30:00',
                     location: 'Parroquia Nuestra Señora de Lujan, Av. Pergamino 203, San José'
                 },
                 celebration: {
                     title: 'Celebración de Boda - Danny & Sofía',
-                    startTime: '2025-05-15T20:00:00',
-                    endTime: '2025-05-16T03:00:00',
+                    startTime: '2025-09-15T15:30:00',
+                    endTime: '2025-09-16T21:00:00',
                     location: 'Salon de fiestas Avril, Av. Los Reartes 12, San José'
                 }
             };
