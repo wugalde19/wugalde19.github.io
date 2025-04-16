@@ -492,7 +492,7 @@
          */
         const API_CONFIG = {
             // Google Apps Script deployed as web app URL
-            baseUrl: 'https://script.google.com/macros/s/AKfycbwQIe_-jNSjRJW3VEIwWlv9MdvcCifhR3kKRmv_ES4GX6vbNFWf3TutjjcqO-pLe-e3/exec',
+            baseUrl: 'https://script.google.com/macros/s/AKfycbzQFVo8phTOBTL6s-4JIpUia9CiMv6KQ1z4Su9_j5373WY0OvTfkgpeSfvQqgVExaCS/exec',
             
             // Sheets IDs
             sheetsIds: {
@@ -551,7 +551,12 @@
          */
         async function getInviteeData(inviteeId) {
             try {
-                const result = await fetchJsonp(`${API_CONFIG.baseUrl}?action=getInvitee&id=${inviteeId}`);
+                console.log('Fetching invitee data for ID:', inviteeId);
+                const requestUrl = `${API_CONFIG.baseUrl}?action=getInvitee&id=${inviteeId}`;
+                console.log('Request URL:', requestUrl);
+                
+                const result = await fetchJsonp(requestUrl);
+                console.log('API response:', result);
                 
                 if (result.status === 'success') {
                     return result.data;
@@ -741,6 +746,8 @@
             
             if (inviteeId) {
                 try {
+                    console.log('URL has invitee ID:', inviteeId);
+                    
                     // Load invitee data
                     const inviteeData = await getInviteeData(inviteeId);
                     
@@ -767,10 +774,58 @@
                 } catch (error) {
                     console.error('Error loading invitee data:', error);
                     // Handle error (e.g., show error message to user)
-                    alert('Error loading invitation data. Please try again later.');
+                    
+                    // Show a more user-friendly message on the page
+                    const errorMessage = document.createElement('div');
+                    errorMessage.className = 'error-message';
+                    errorMessage.style.backgroundColor = '#ffebee';
+                    errorMessage.style.border = '1px solid #f44336';
+                    errorMessage.style.borderRadius = '5px';
+                    errorMessage.style.padding = '15px';
+                    errorMessage.style.margin = '20px auto';
+                    errorMessage.style.maxWidth = '600px';
+                    errorMessage.style.textAlign = 'center';
+                    
+                    errorMessage.innerHTML = `
+                        <h3 style="color: #d32f2f; margin-top: 0;">Invitation Not Found</h3>
+                        <p>We couldn't find your invitation with ID: <strong>${inviteeId}</strong></p>
+                        <p>This could be because:</p>
+                        <ul style="text-align: left; display: inline-block;">
+                            <li>The invitation link is incorrect</li>
+                            <li>The invitation has been removed</li>
+                            <li>There was a technical error connecting to our system</li>
+                        </ul>
+                        <p>Please contact the wedding hosts for assistance.</p>
+                    `;
+                    
+                    // Insert the error message at the top of the page
+                    document.body.insertBefore(errorMessage, document.body.firstChild);
+                    
+                    alert('Error loading invitation data. Please try again later or contact the hosts for assistance.');
                 }
             } else {
                 console.warn('No invitee ID found in URL');
+                // Create a warning message
+                const warningMessage = document.createElement('div');
+                warningMessage.className = 'warning-message';
+                warningMessage.style.backgroundColor = '#fff9c4';
+                warningMessage.style.border = '1px solid #fbc02d';
+                warningMessage.style.borderRadius = '5px';
+                warningMessage.style.padding = '15px';
+                warningMessage.style.margin = '20px auto';
+                warningMessage.style.maxWidth = '600px';
+                warningMessage.style.textAlign = 'center';
+                
+                warningMessage.innerHTML = `
+                    <h3 style="color: #ff6f00; margin-top: 0;">Invitation ID Missing</h3>
+                    <p>No invitation ID was found in the URL.</p>
+                    <p>You need a personal invitation link to RSVP for this wedding.</p>
+                    <p>Please contact the wedding hosts to receive your invitation.</p>
+                `;
+                
+                // Insert the warning message at the top of the page
+                document.body.insertBefore(warningMessage, document.body.firstChild);
+                
                 // Hide RSVP buttons or show generic message
                 document.querySelectorAll('.btn[onclick*="openModal(\'ceremonyConfirm\')"], .btn[onclick*="openModal(\'celebrationConfirm\')"]')
                     .forEach(btn => btn.style.display = 'none');

@@ -23,21 +23,28 @@ function doGet(e) {
   const id = params.id;
   const callback = params.callback; // For JSONP support
   
+  // Log the request for debugging
+  Logger.log("GET Request - Action: " + action + ", ID: " + id);
+  
   // Create output content
   let content;
   
   // Return appropriate data based on the action
   if (action === "getInvitee" && id) {
+    // Added debugging
+    Logger.log("Looking for invitee with ID: " + id);
     content = getInviteeDataJson(id);
+    Logger.log("Response: " + content);
   } else if (action === "getAllInvitees") {
     content = getAllInviteesJson();
   } else if (action === "getDashboardStats") {
     content = getDashboardStatsJson();
   } else {
     // Default response if no valid action is specified
+    Logger.log("Invalid action: " + action);
     content = JSON.stringify({
       status: "error",
-      message: "Invalid action"
+      message: "Invalid action: " + action
     });
   }
   
@@ -334,7 +341,10 @@ function submitMusicSuggestionJson(data) {
 // Function to create a new invitee
 function createInviteeJson(data) {
   try {
+    Logger.log("Creating new invitee with data: " + JSON.stringify(data));
+    
     if (!data.name) {
+      Logger.log("Error: Name is required");
       return JSON.stringify({
         status: "error",
         message: "Name is required"
@@ -348,11 +358,13 @@ function createInviteeJson(data) {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const inviteesSheet = ss.getSheetByName("Invitees");
     if (!inviteesSheet) {
+      Logger.log("Invitees sheet not found, creating sheet structure");
       setupSheets();
     }
     
     // Generate a secure ID
     const id = generateSecureId(data.name);
+    Logger.log("Generated secure ID: " + id);
     const dateAdded = new Date().toISOString();
     
     // Add the invitee to the sheet
@@ -367,7 +379,10 @@ function createInviteeJson(data) {
     ]);
     
     // Log for debugging
-    Logger.log("Invitee created: " + JSON.stringify({id, name: data.name, maxGuests}));
+    Logger.log("Invitee created successfully: ID=" + id + ", Name=" + data.name);
+    
+    // Generate the invitation link for the response
+    const invitationLink = "https://wugalde19.github.io/invite/invitation.html?id=" + id;
     
     return JSON.stringify({
       status: "success",
@@ -378,7 +393,8 @@ function createInviteeJson(data) {
         email,
         notes,
         dateAdded,
-        status: "pending"
+        status: "pending",
+        invitationLink // Include the invitation link in the response
       },
       message: "Invitee created successfully"
     });
