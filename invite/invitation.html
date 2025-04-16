@@ -486,7 +486,227 @@
     </button>
     
     <!-- Scripts -->
-    <script src="js/main.js"></script>
     <script src="js/api.js"></script>
+    <script>
+        // Wedding date - Update this to your actual wedding date
+        const weddingDate = new Date('2025-05-15T17:00:00');
+        
+        function updateCountdown() {
+            const now = new Date();
+            const diff = weddingDate - now;
+            
+            if (diff > 0) {
+                const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30));
+                const days = Math.floor((diff % (1000 * 60 * 60 * 24 * 30)) / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                
+                document.getElementById('months').textContent = String(months).padStart(2, '0');
+                document.getElementById('days').textContent = String(days).padStart(2, '0');
+                document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+                document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+                document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+                
+                // Hide months container if 0 months remaining
+                const monthsContainer = document.getElementById('months-container');
+                if (months === 0) {
+                    monthsContainer.style.display = 'none';
+                } else {
+                    monthsContainer.style.display = 'block';
+                }
+            } else {
+                // If wedding date has passed
+                document.getElementById('countdown').style.display = 'none';
+            }
+        }
+
+        // Initialize invitee data when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Get invitee ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const inviteeId = urlParams.get('id');
+            
+            if (inviteeId) {
+                try {
+                    // Load invitee data
+                    const inviteeData = await getInviteeData(inviteeId);
+                    
+                    // Store invitee data for use in confirmation modals
+                    window.inviteeData = inviteeData;
+                    
+                    // Update confirmation modals with max guests
+                    updateGuestCountOptions('ceremony', inviteeData.maxGuests);
+                    updateGuestCountOptions('celebration', inviteeData.maxGuests);
+                    
+                    // Show guest count in confirmation text
+                    document.getElementById('ceremonyGuestCount').textContent = inviteeData.maxGuests;
+                    document.getElementById('celebrationGuestCount').textContent = inviteeData.maxGuests;
+                    
+                    // Set invitee IDs in forms
+                    document.getElementById('ceremonyInviteeId').value = inviteeId;
+                    document.getElementById('celebrationInviteeId').value = inviteeId;
+                    document.getElementById('musicInviteeId').value = inviteeId;
+                } catch (error) {
+                    console.error('Error loading invitee data:', error);
+                    // Handle error (e.g., show error message to user)
+                }
+            }
+            
+            // Start countdown
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+        });
+
+        /**
+         * Update guest count options in confirmation modal
+         * @param {string} eventType - 'ceremony' or 'celebration'
+         * @param {number} maxGuests - Maximum number of guests allowed
+         */
+        function updateGuestCountOptions(eventType, maxGuests) {
+            const select = document.getElementById(`${eventType}AttendingCount`);
+            select.innerHTML = ''; // Clear existing options
+            
+            // Add options from 1 to maxGuests
+            for (let i = 1; i <= maxGuests; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i;
+                select.appendChild(option);
+            }
+        }
+
+        /**
+         * Handle attendance confirmation button click
+         * @param {string} eventType - 'ceremony' or 'celebration'
+         * @param {boolean} attending - Whether the invitee is attending
+         */
+        function confirmAttendance(eventType, attending) {
+            const guestDetails = document.getElementById(`${eventType}GuestDetails`);
+            if (attending) {
+                guestDetails.style.display = 'block';
+            } else {
+                guestDetails.style.display = 'none';
+                // Reset guest count
+                document.getElementById(`${eventType}AttendingCount`).value = '1';
+            }
+        }
+
+        /**
+         * Submit confirmation for an event
+         * @param {string} eventType - 'ceremony' or 'celebration'
+         */
+        async function submitConfirmation(eventType) {
+            const form = document.getElementById(`${eventType}ConfirmForm`);
+            const inviteeId = document.getElementById(`${eventType}InviteeId`).value;
+            const attending = document.getElementById(`${eventType}GuestDetails`).style.display === 'block';
+            const attendingCount = attending ? parseInt(document.getElementById(`${eventType}AttendingCount`).value) : 0;
+            const comment = document.getElementById(`${eventType}Comment`).value;
+            
+            try {
+                await submitConfirmationData({
+                    inviteeId,
+                    eventType,
+                    attending,
+                    attendingCount,
+                    comment
+                });
+                
+                // Close modal and show success message
+                closeModal(`${eventType}Confirm`);
+                alert('¡Gracias por confirmar tu asistencia!');
+            } catch (error) {
+                console.error('Error submitting confirmation:', error);
+                alert('Hubo un error al confirmar tu asistencia. Por favor, intenta nuevamente.');
+            }
+        }
+
+        /**
+         * Submit a music suggestion
+         */
+        async function submitMusicSuggestion() {
+            const form = document.getElementById('musicSuggestionForm');
+            const inviteeId = document.getElementById('musicInviteeId').value;
+            const songTitle = document.getElementById('songTitle').value;
+            const artist = document.getElementById('artist').value;
+            const comment = document.getElementById('musicComment').value;
+            
+            try {
+                await submitMusicSuggestionData({
+                    inviteeId,
+                    songTitle,
+                    artist,
+                    comment
+                });
+                
+                // Close modal and show success message
+                closeModal('musicSuggestion');
+                alert('¡Gracias por tu sugerencia musical!');
+                
+                // Reset form
+                form.reset();
+            } catch (error) {
+                console.error('Error submitting music suggestion:', error);
+                alert('Hubo un error al enviar tu sugerencia. Por favor, intenta nuevamente.');
+            }
+        }
+
+        /**
+         * Open a modal
+         * @param {string} modalId - The ID of the modal to open
+         */
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+
+        /**
+         * Close a modal
+         * @param {string} modalId - The ID of the modal to close
+         */
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        /**
+         * Add event to calendar
+         * @param {string} eventType - 'ceremony' or 'celebration'
+         */
+        function addToCalendar(eventType) {
+            const eventDetails = {
+                ceremony: {
+                    title: 'Ceremonia de Boda - Danny & Sofía',
+                    startTime: '2025-05-15T17:00:00',
+                    endTime: '2025-05-15T18:30:00',
+                    location: 'Parroquia Nuestra Señora de Lujan, Av. Pergamino 203, San José'
+                },
+                celebration: {
+                    title: 'Celebración de Boda - Danny & Sofía',
+                    startTime: '2025-05-15T20:00:00',
+                    endTime: '2025-05-16T03:00:00',
+                    location: 'Salon de fiestas Avril, Av. Los Reartes 12, San José'
+                }
+            };
+            
+            const event = eventDetails[eventType];
+            const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${event.startTime.replace(/[-:]/g, '')}/${event.endTime.replace(/[-:]/g, '')}&location=${encodeURIComponent(event.location)}`;
+            
+            window.open(googleCalendarUrl, '_blank');
+        }
+
+        /**
+         * Open directions in maps app
+         * @param {string} address - The destination address
+         * @param {string} app - 'google' or 'waze'
+         */
+        function openDirections(address, app) {
+            const encodedAddress = encodeURIComponent(address);
+            
+            if (app === 'google') {
+                window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`, '_blank');
+            } else if (app === 'waze') {
+                window.open(`https://www.waze.com/ul?q=${encodedAddress}`, '_blank');
+            }
+        }
+    </script>
 </body>
 </html> 
