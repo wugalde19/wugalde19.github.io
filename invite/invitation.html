@@ -740,6 +740,10 @@
 
         // Initialize invitee data when page loads
         document.addEventListener('DOMContentLoaded', async function() {
+            // Start countdown anyway - this is independent of invitee data
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+            
             // Get invitee ID from URL
             const urlParams = new URLSearchParams(window.location.search);
             const inviteeId = urlParams.get('id');
@@ -748,32 +752,37 @@
                 try {
                     console.log('URL has invitee ID:', inviteeId);
                     
-                    // Load invitee data
-                    const inviteeData = await getInviteeData(inviteeId);
-                    
-                    // Store invitee data for use in confirmation modals
-                    window.inviteeData = inviteeData;
-                    
-                    console.log('Loaded invitee data:', inviteeData);
-                    
-                    // Get the max guests from the data (handle both maxGuests and maxguests properties)
-                    const maxGuests = inviteeData.maxguests || inviteeData.maxGuests || 1;
-                    
-                    // Update confirmation modals with max guests
-                    updateGuestCountOptions('ceremony', maxGuests);
-                    updateGuestCountOptions('celebration', maxGuests);
-                    
-                    // Show guest count in confirmation text
-                    document.getElementById('ceremonyGuestCount').textContent = maxGuests;
-                    document.getElementById('celebrationGuestCount').textContent = maxGuests;
-                    
-                    // Set invitee IDs in forms
-                    document.getElementById('ceremonyInviteeId').value = inviteeId;
-                    document.getElementById('celebrationInviteeId').value = inviteeId;
-                    document.getElementById('musicInviteeId').value = inviteeId;
+                    // If the ID appears to be a generated ID (lengthy base64 string)
+                    // proceed with fetching, otherwise show error
+                    if (inviteeId.length > 10) {
+                        // Load invitee data
+                        const inviteeData = await getInviteeData(inviteeId);
+                        
+                        // Store invitee data for use in confirmation modals
+                        window.inviteeData = inviteeData;
+                        
+                        console.log('Loaded invitee data:', inviteeData);
+                        
+                        // Get the max guests from the data (handle both maxGuests and maxguests properties)
+                        const maxGuests = inviteeData.maxguests || inviteeData.maxGuests || 1;
+                        
+                        // Update confirmation modals with max guests
+                        updateGuestCountOptions('ceremony', maxGuests);
+                        updateGuestCountOptions('celebration', maxGuests);
+                        
+                        // Show guest count in confirmation text
+                        document.getElementById('ceremonyGuestCount').textContent = maxGuests;
+                        document.getElementById('celebrationGuestCount').textContent = maxGuests;
+                        
+                        // Set invitee IDs in forms
+                        document.getElementById('ceremonyInviteeId').value = inviteeId;
+                        document.getElementById('celebrationInviteeId').value = inviteeId;
+                        document.getElementById('musicInviteeId').value = inviteeId;
+                    } else {
+                        throw new Error('Invalid invitation ID format');
+                    }
                 } catch (error) {
                     console.error('Error loading invitee data:', error);
-                    // Handle error (e.g., show error message to user)
                     
                     // Show a more user-friendly message on the page
                     const errorMessage = document.createElement('div');
@@ -801,7 +810,9 @@
                     // Insert the error message at the top of the page
                     document.body.insertBefore(errorMessage, document.body.firstChild);
                     
-                    alert('Error loading invitation data. Please try again later or contact the hosts for assistance.');
+                    // Hide RSVP buttons
+                    document.querySelectorAll('.btn[onclick*="openModal(\'ceremonyConfirm\')"], .btn[onclick*="openModal(\'celebrationConfirm\')"]')
+                        .forEach(btn => btn.style.display = 'none');
                 }
             } else {
                 console.warn('No invitee ID found in URL');
@@ -830,10 +841,6 @@
                 document.querySelectorAll('.btn[onclick*="openModal(\'ceremonyConfirm\')"], .btn[onclick*="openModal(\'celebrationConfirm\')"]')
                     .forEach(btn => btn.style.display = 'none');
             }
-            
-            // Start countdown
-            updateCountdown();
-            setInterval(updateCountdown, 1000);
         });
 
         /**
