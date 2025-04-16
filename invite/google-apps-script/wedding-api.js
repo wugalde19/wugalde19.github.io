@@ -94,51 +94,79 @@ function doPost(e) {
       return ContentService.createTextOutput(callback + "(" + errorContent + ")")
         .setMimeType(ContentService.MimeType.JAVASCRIPT);
     } else {
-      const errorOutput = ContentService.createTextOutput(errorContent);
-      errorOutput.setMimeType(ContentService.MimeType.JSON);
+      // Normal JSON response with CORS headers
+      const output = ContentService.createTextOutput(errorContent);
+      output.setMimeType(ContentService.MimeType.JSON);
       
-      // Add CORS headers to error responses too
-      errorOutput.setHeader('Access-Control-Allow-Origin', '*');
-      errorOutput.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-      errorOutput.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+      // Add proper CORS headers
+      output.setHeader('Access-Control-Allow-Origin', '*');
+      output.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+      output.setHeader('Access-Control-Allow-Headers', 'Content-Type');
       
-      return errorOutput;
+      return output;
     }
   }
   
   const action = data.action || params.action;
   let content;
   
-  // Process based on the action
-  if (action === "submitRSVP") {
-    content = submitRSVPJson(data);
-  } else if (action === "submitMusicSuggestion") {
-    content = submitMusicSuggestionJson(data);
-  } else if (action === "createInvitee") {
-    content = createInviteeJson(data);
-  } else {
-    // Default response if no valid action is specified
-    content = JSON.stringify({
+  try {
+    // Process based on the action
+    if (action === "submitRSVP") {
+      content = submitRSVPJson(data);
+    } else if (action === "submitMusicSuggestion") {
+      content = submitMusicSuggestionJson(data);
+    } else if (action === "createInvitee") {
+      content = createInviteeJson(data);
+    } else {
+      // Default response if no valid action is specified
+      content = JSON.stringify({
+        status: "error",
+        message: "Invalid action: " + action
+      });
+    }
+    
+    // Handle JSONP if callback is provided
+    if (callback) {
+      return ContentService.createTextOutput(callback + "(" + content + ")")
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    } else {
+      // Normal JSON response with CORS headers
+      const output = ContentService.createTextOutput(content);
+      output.setMimeType(ContentService.MimeType.JSON);
+      
+      // Add proper CORS headers
+      output.setHeader('Access-Control-Allow-Origin', '*');
+      output.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+      output.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+      
+      return output;
+    }
+  } catch (error) {
+    // Error handling for any exceptions during processing
+    Logger.log("Error in doPost: " + error.toString());
+    
+    const errorContent = JSON.stringify({
       status: "error",
-      message: "Invalid action"
+      message: "Error processing request: " + error.toString()
     });
-  }
-  
-  // Handle JSONP if callback is provided
-  if (callback) {
-    return ContentService.createTextOutput(callback + "(" + content + ")")
-      .setMimeType(ContentService.MimeType.JAVASCRIPT);
-  } else {
-    // Normal JSON response with CORS headers
-    const output = ContentService.createTextOutput(content);
-    output.setMimeType(ContentService.MimeType.JSON);
     
-    // Add proper CORS headers
-    output.setHeader('Access-Control-Allow-Origin', '*');
-    output.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    output.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    
-    return output;
+    // Handle JSONP if callback is provided
+    if (callback) {
+      return ContentService.createTextOutput(callback + "(" + errorContent + ")")
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    } else {
+      // Normal JSON response with CORS headers
+      const output = ContentService.createTextOutput(errorContent);
+      output.setMimeType(ContentService.MimeType.JSON);
+      
+      // Add proper CORS headers
+      output.setHeader('Access-Control-Allow-Origin', '*');
+      output.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+      output.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+      
+      return output;
+    }
   }
 }
 
@@ -343,7 +371,8 @@ function createInviteeJson(data) {
   try {
     Logger.log("Creating new invitee with data: " + JSON.stringify(data));
     
-    if (!data.name) {
+    // Check for required data
+    if (!data || !data.name) {
       Logger.log("Error: Name is required");
       return JSON.stringify({
         status: "error",
@@ -351,44 +380,73 @@ function createInviteeJson(data) {
       });
     }
     
+    // Parse and validate data
+    const name = String(data.name);
     const maxGuests = parseInt(data.maxGuests) || 2;
     const email = data.email || "";
     const notes = data.notes || "";
     
+    Logger.log("Validated data: name=" + name + ", maxGuests=" + maxGuests);
+    
+    // Get spreadsheet and sheet
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const inviteesSheet = ss.getSheetByName("Invitees");
+    if (!ss) {
+      Logger.log("Error: Could not access active spreadsheet");
+      return JSON.stringify({
+        status: "error",
+        message: "Could not access spreadsheet"
+      });
+    }
+    
+    let inviteesSheet = ss.getSheetByName("Invitees");
     if (!inviteesSheet) {
       Logger.log("Invitees sheet not found, creating sheet structure");
       setupSheets();
+      inviteesSheet = ss.getSheetByName("Invitees");
+      
+      if (!inviteesSheet) {
+        Logger.log("Error: Failed to create Invitees sheet");
+        return JSON.stringify({
+          status: "error",
+          message: "Failed to create Invitees sheet"
+        });
+      }
     }
     
     // Generate a secure ID
-    const id = generateSecureId(data.name);
+    const id = generateSecureId(name);
     Logger.log("Generated secure ID: " + id);
     const dateAdded = new Date().toISOString();
     
     // Add the invitee to the sheet
-    inviteesSheet.appendRow([
-      id,
-      data.name,
-      maxGuests,
-      email,
-      notes,
-      dateAdded,
-      "pending" // Initial status
-    ]);
-    
-    // Log for debugging
-    Logger.log("Invitee created successfully: ID=" + id + ", Name=" + data.name);
+    try {
+      inviteesSheet.appendRow([
+        id,
+        name,
+        maxGuests,
+        email,
+        notes,
+        dateAdded,
+        "pending" // Initial status
+      ]);
+      Logger.log("Successfully added row to sheet");
+    } catch (appendError) {
+      Logger.log("Error appending row: " + appendError.toString());
+      return JSON.stringify({
+        status: "error",
+        message: "Error adding invitee to spreadsheet: " + appendError.toString()
+      });
+    }
     
     // Generate the invitation link for the response
     const invitationLink = "https://wugalde19.github.io/invite/invitation.html?id=" + id;
+    Logger.log("Invitation link generated: " + invitationLink);
     
     return JSON.stringify({
       status: "success",
       data: { 
         id,
-        name: data.name,
+        name,
         maxGuests,
         email,
         notes,
@@ -399,7 +457,7 @@ function createInviteeJson(data) {
       message: "Invitee created successfully"
     });
   } catch(error) {
-    Logger.log("Error creating invitee: " + error.toString());
+    Logger.log("Error creating invitee: " + error.toString() + "\n" + error.stack);
     return JSON.stringify({
       status: "error",
       message: "Failed to create invitee: " + error.toString()

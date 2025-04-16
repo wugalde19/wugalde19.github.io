@@ -181,7 +181,7 @@
     <script>
         // API configuration
         const API_CONFIG = {
-            baseUrl: 'https://script.google.com/macros/s/AKfycbzQFVo8phTOBTL6s-4JIpUia9CiMv6KQ1z4Su9_j5373WY0OvTfkgpeSfvQqgVExaCS/exec'
+            baseUrl: 'https://script.google.com/macros/s/AKfycbw70ICC3xz8_eht730jw8plwvpei85CDEToM8E3FYbGqyvAxsbcl4TO4x0s1dhsf_y1/exec'
         };
 
         /**
@@ -334,12 +334,20 @@
             try {
                 console.log('Adding new invitee:', name, 'with max guests:', maxGuests);
                 
+                // Create a hidden iframe for submission
+                const iframeId = 'hidden_submit_frame_' + Date.now();
+                const iframe = document.createElement('iframe');
+                iframe.id = iframeId;
+                iframe.name = iframeId;
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+                
                 // Create a form element
                 const form = document.createElement('form');
                 form.style.display = 'none';
                 form.method = 'post';
                 form.action = API_CONFIG.baseUrl;
-                form.target = '_blank'; // Open in new window that will be auto-closed
+                form.target = iframeId; // Target the hidden iframe
                 
                 // Add action parameter
                 const actionInput = document.createElement('input');
@@ -370,22 +378,45 @@
                 document.body.appendChild(form);
                 console.log('Submitting form to URL:', API_CONFIG.baseUrl);
                 
-                // We use a timeout to allow time for the form to be submitted
-                form.submit();
-                
-                // Wait a bit to allow the form submission to complete
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Remove the form
-                document.body.removeChild(form);
-                
-                // Reload the guest list
-                loadGuests();
-                
-                return {
-                    success: true,
-                    invitationLink: invitationLink
-                };
+                return new Promise((resolve) => {
+                    // Set a timeout for form submission (5 seconds)
+                    const timeoutId = setTimeout(() => {
+                        console.log('Form submission timed out');
+                        cleanup();
+                        resolve({
+                            success: true,
+                            invitationLink: invitationLink
+                        });
+                    }, 5000);
+                    
+                    // Handle iframe load event
+                    iframe.onload = function() {
+                        console.log('Form submitted, response received');
+                        clearTimeout(timeoutId);
+                        cleanup();
+                        resolve({
+                            success: true,
+                            invitationLink: invitationLink
+                        });
+                    };
+                    
+                    // Cleanup function
+                    function cleanup() {
+                        // Remove the form and iframe
+                        try {
+                            document.body.removeChild(form);
+                            document.body.removeChild(iframe);
+                        } catch (e) {
+                            console.error('Error cleaning up:', e);
+                        }
+                        
+                        // Reload the guest list
+                        loadGuests();
+                    }
+                    
+                    // Submit the form
+                    form.submit();
+                });
             } catch (error) {
                 console.error('Error adding invitee:', error);
                 throw error;

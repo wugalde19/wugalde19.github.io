@@ -492,7 +492,7 @@
          */
         const API_CONFIG = {
             // Google Apps Script deployed as web app URL
-            baseUrl: 'https://script.google.com/macros/s/AKfycbzQFVo8phTOBTL6s-4JIpUia9CiMv6KQ1z4Su9_j5373WY0OvTfkgpeSfvQqgVExaCS/exec',
+            baseUrl: 'https://script.google.com/macros/s/AKfycbw70ICC3xz8_eht730jw8plwvpei85CDEToM8E3FYbGqyvAxsbcl4TO4x0s1dhsf_y1/exec',
             
             // Sheets IDs
             sheetsIds: {
@@ -552,7 +552,14 @@
         async function getInviteeData(inviteeId) {
             try {
                 console.log('Fetching invitee data for ID:', inviteeId);
-                const requestUrl = `${API_CONFIG.baseUrl}?action=getInvitee&id=${inviteeId}`;
+                
+                // Try to handle the ID parameter better by trimming and encoding properly
+                const cleanId = inviteeId.trim();
+                console.log('Cleaned ID:', cleanId);
+                
+                // Add timestamp to prevent caching
+                const timestamp = new Date().getTime();
+                const requestUrl = `${API_CONFIG.baseUrl}?action=getInvitee&id=${encodeURIComponent(cleanId)}&_=${timestamp}`;
                 console.log('Request URL:', requestUrl);
                 
                 const result = await fetchJsonp(requestUrl);
@@ -561,6 +568,22 @@
                 if (result.status === 'success') {
                     return result.data;
                 } else {
+                    // Try an alternate approach - get all invitees and search manually
+                    console.log('First approach failed, trying to get all invitees...');
+                    const allResult = await fetchJsonp(`${API_CONFIG.baseUrl}?action=getAllInvitees&_=${timestamp}`);
+                    
+                    if (allResult.status === 'success' && Array.isArray(allResult.data)) {
+                        console.log('Got all invitees, searching for ID:', cleanId);
+                        // Search for the invitee in the data
+                        const invitee = allResult.data.find(inv => inv.id === cleanId);
+                        
+                        if (invitee) {
+                            console.log('Found invitee in the list:', invitee);
+                            return invitee;
+                        }
+                    }
+                    
+                    // If still not found, throw the original error
                     throw new Error(result.message || 'Failed to load invitee data');
                 }
             } catch (error) {
