@@ -151,32 +151,56 @@ function doOptions(e) {
 
 // Function to get invitee data by ID as JSON string
 function getInviteeDataJson(id) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const inviteesSheet = ss.getSheetByName("Invitees");
-  const data = inviteesSheet.getDataRange().getValues();
-  
-  // Find the row with the matching ID
-  for (let i = 1; i < data.length; i++) { // Start at 1 to skip header row
-    if (data[i][0] === id) {
-      // Return invitee data
-      const invitee = {
-        id: data[i][0],
-        name: data[i][1],
-        maxGuests: data[i][2]
-      };
-      
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const inviteesSheet = ss.getSheetByName("Invitees");
+    
+    if (!inviteesSheet) {
       return JSON.stringify({
-        status: "success",
-        data: invitee
+        status: "error",
+        message: "Invitees sheet not found"
       });
     }
+    
+    const data = inviteesSheet.getDataRange().getValues();
+    const headers = data[0]; // Get the headers from the first row
+    
+    // Find the row with the matching ID
+    for (let i = 1; i < data.length; i++) { // Start at 1 to skip header row
+      if (data[i][0] === id) {
+        // Create an invitee object with all values from the row
+        const invitee = {};
+        
+        // Map headers to values
+        for (let j = 0; j < headers.length; j++) {
+          invitee[headers[j].toLowerCase()] = data[i][j];
+        }
+        
+        // Ensure maxGuests is a number
+        invitee.maxguests = parseInt(invitee.maxguests) || 2;
+        
+        // Log for debugging
+        Logger.log("Found invitee: " + JSON.stringify(invitee));
+        
+        return JSON.stringify({
+          status: "success",
+          data: invitee
+        });
+      }
+    }
+    
+    // If no matching invitee found
+    return JSON.stringify({
+      status: "error",
+      message: "Invitee not found"
+    });
+  } catch (error) {
+    Logger.log("Error getting invitee data: " + error.toString());
+    return JSON.stringify({
+      status: "error",
+      message: "Failed to get invitee data: " + error.toString()
+    });
   }
-  
-  // If no matching invitee found
-  return JSON.stringify({
-    status: "error",
-    message: "Invitee not found"
-  });
 }
 
 // Function to get all invitees (for admin page) as JSON string
@@ -309,34 +333,62 @@ function submitMusicSuggestionJson(data) {
 
 // Function to create a new invitee
 function createInviteeJson(data) {
-  if (!data.name) {
+  try {
+    if (!data.name) {
+      return JSON.stringify({
+        status: "error",
+        message: "Name is required"
+      });
+    }
+    
+    const maxGuests = parseInt(data.maxGuests) || 2;
+    const email = data.email || "";
+    const notes = data.notes || "";
+    
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const inviteesSheet = ss.getSheetByName("Invitees");
+    if (!inviteesSheet) {
+      setupSheets();
+    }
+    
+    // Generate a secure ID
+    const id = generateSecureId(data.name);
+    const dateAdded = new Date().toISOString();
+    
+    // Add the invitee to the sheet
+    inviteesSheet.appendRow([
+      id,
+      data.name,
+      maxGuests,
+      email,
+      notes,
+      dateAdded,
+      "pending" // Initial status
+    ]);
+    
+    // Log for debugging
+    Logger.log("Invitee created: " + JSON.stringify({id, name: data.name, maxGuests}));
+    
+    return JSON.stringify({
+      status: "success",
+      data: { 
+        id,
+        name: data.name,
+        maxGuests,
+        email,
+        notes,
+        dateAdded,
+        status: "pending"
+      },
+      message: "Invitee created successfully"
+    });
+  } catch(error) {
+    Logger.log("Error creating invitee: " + error.toString());
     return JSON.stringify({
       status: "error",
-      message: "Name is required"
+      message: "Failed to create invitee: " + error.toString()
     });
   }
-  
-  const maxGuests = data.maxGuests || 2;
-  
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const inviteesSheet = ss.getSheetByName("Invitees");
-  
-  // Generate a unique ID
-  const id = Utilities.getUuid();
-  
-  // Add the invitee to the sheet
-  inviteesSheet.appendRow([
-    id,
-    data.name,
-    maxGuests,
-    new Date()
-  ]);
-  
-  return JSON.stringify({
-    status: "success",
-    data: { id },
-    message: "Invitee created successfully"
-  });
 }
 
 // Function to get the RSVP status of an invitee

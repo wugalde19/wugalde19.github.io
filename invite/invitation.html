@@ -486,8 +486,220 @@
     </button>
     
     <!-- Scripts -->
-    <script src="js/api.js"></script>
     <script>
+        /**
+         * API configuration
+         */
+        const API_CONFIG = {
+            // Google Apps Script deployed as web app URL
+            baseUrl: 'https://script.google.com/macros/s/AKfycbwQIe_-jNSjRJW3VEIwWlv9MdvcCifhR3kKRmv_ES4GX6vbNFWf3TutjjcqO-pLe-e3/exec',
+            
+            // Sheets IDs
+            sheetsIds: {
+                invitees: '1YOUR_INVITEES_SHEET_ID',
+                confirmations: '1YOUR_CONFIRMATIONS_SHEET_ID',
+                musicSuggestions: '1YOUR_MUSIC_SUGGESTIONS_SHEET_ID'
+            }
+        };
+
+        /**
+         * Helper function to load scripts via JSONP to bypass CORS restrictions
+         * @param {string} url - The URL to fetch
+         * @returns {Promise} - A promise that resolves with the data
+         */
+        function fetchJsonp(url) {
+            return new Promise((resolve, reject) => {
+                // Create a unique callback name
+                const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+                
+                // Create script element
+                const script = document.createElement('script');
+                
+                // Setup the callback function
+                window[callbackName] = function(data) {
+                    // Clean up: remove script and delete callback
+                    document.body.removeChild(script);
+                    delete window[callbackName];
+                    
+                    // Resolve the promise with data
+                    resolve(data);
+                };
+                
+                // Add callback parameter to URL
+                const jsonpUrl = url + (url.includes('?') ? '&' : '?') + 'callback=' + callbackName;
+                
+                // Setup script error handling
+                script.onerror = function() {
+                    // Clean up
+                    document.body.removeChild(script);
+                    delete window[callbackName];
+                    
+                    // Reject the promise
+                    reject(new Error('JSONP request failed'));
+                };
+                
+                // Set script attributes and append to DOM
+                script.src = jsonpUrl;
+                document.body.appendChild(script);
+            });
+        }
+
+        /**
+         * Get invitee data from Google Sheets
+         * @param {string} inviteeId - The ID of the invitee
+         * @returns {Promise<Object>} - The invitee data
+         */
+        async function getInviteeData(inviteeId) {
+            try {
+                const result = await fetchJsonp(`${API_CONFIG.baseUrl}?action=getInvitee&id=${inviteeId}`);
+                
+                if (result.status === 'success') {
+                    return result.data;
+                } else {
+                    throw new Error(result.message || 'Failed to load invitee data');
+                }
+            } catch (error) {
+                console.error('Error loading invitee data:', error);
+                throw error;
+            }
+        }
+
+        /**
+         * Submit confirmation data to Google Sheets using an iframe for POST request
+         * @param {Object} data - The confirmation data
+         * @returns {Promise<Object>} - The response from the API
+         */
+        function submitConfirmationData(data) {
+            return new Promise((resolve, reject) => {
+                // Create a unique ID for the iframe
+                const iframeId = 'iframe_submit_' + Math.round(100000 * Math.random());
+                
+                // Create an invisible iframe
+                const iframe = document.createElement('iframe');
+                iframe.setAttribute('id', iframeId);
+                iframe.setAttribute('name', iframeId);
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+                
+                // Create a form to submit the data
+                const form = document.createElement('form');
+                form.setAttribute('method', 'post');
+                form.setAttribute('action', API_CONFIG.baseUrl);
+                form.setAttribute('target', iframeId);
+                
+                // Add action parameter
+                const actionInput = document.createElement('input');
+                actionInput.setAttribute('type', 'hidden');
+                actionInput.setAttribute('name', 'action');
+                actionInput.setAttribute('value', 'submitRSVP');
+                form.appendChild(actionInput);
+                
+                // Add all data parameters
+                Object.keys(data).forEach(key => {
+                    const input = document.createElement('input');
+                    input.setAttribute('type', 'hidden');
+                    input.setAttribute('name', key);
+                    input.setAttribute('value', data[key]);
+                    form.appendChild(input);
+                });
+                
+                // Append form to document
+                document.body.appendChild(form);
+                
+                // Setup response handling
+                iframe.onload = function() {
+                    setTimeout(() => {
+                        // Clean up
+                        document.body.removeChild(iframe);
+                        document.body.removeChild(form);
+                        
+                        // Resolve with success
+                        resolve({ success: true });
+                    }, 1000);
+                };
+                
+                // Handle errors
+                iframe.onerror = function() {
+                    // Clean up
+                    document.body.removeChild(iframe);
+                    document.body.removeChild(form);
+                    
+                    reject(new Error('Failed to submit RSVP'));
+                };
+                
+                // Submit the form
+                form.submit();
+            });
+        }
+
+        /**
+         * Submit music suggestion to Google Sheets using an iframe
+         * @param {Object} data - The music suggestion data
+         * @returns {Promise<Object>} - The response from the API
+         */
+        function submitMusicSuggestionData(data) {
+            return new Promise((resolve, reject) => {
+                // Create a unique ID for the iframe
+                const iframeId = 'iframe_music_' + Math.round(100000 * Math.random());
+                
+                // Create an invisible iframe
+                const iframe = document.createElement('iframe');
+                iframe.setAttribute('id', iframeId);
+                iframe.setAttribute('name', iframeId);
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+                
+                // Create a form to submit the data
+                const form = document.createElement('form');
+                form.setAttribute('method', 'post');
+                form.setAttribute('action', API_CONFIG.baseUrl);
+                form.setAttribute('target', iframeId);
+                
+                // Add action parameter
+                const actionInput = document.createElement('input');
+                actionInput.setAttribute('type', 'hidden');
+                actionInput.setAttribute('name', 'action');
+                actionInput.setAttribute('value', 'submitMusicSuggestion');
+                form.appendChild(actionInput);
+                
+                // Add all data parameters
+                Object.keys(data).forEach(key => {
+                    const input = document.createElement('input');
+                    input.setAttribute('type', 'hidden');
+                    input.setAttribute('name', key);
+                    input.setAttribute('value', data[key]);
+                    form.appendChild(input);
+                });
+                
+                // Append form to document
+                document.body.appendChild(form);
+                
+                // Setup response handling
+                iframe.onload = function() {
+                    setTimeout(() => {
+                        // Clean up
+                        document.body.removeChild(iframe);
+                        document.body.removeChild(form);
+                        
+                        // Resolve with success
+                        resolve({ success: true });
+                    }, 1000);
+                };
+                
+                // Handle errors
+                iframe.onerror = function() {
+                    // Clean up
+                    document.body.removeChild(iframe);
+                    document.body.removeChild(form);
+                    
+                    reject(new Error('Failed to submit music suggestion'));
+                };
+                
+                // Submit the form
+                form.submit();
+            });
+        }
+
         // Wedding date - Update this to your actual wedding date
         const weddingDate = new Date('2025-05-15T17:00:00');
         
@@ -535,13 +747,18 @@
                     // Store invitee data for use in confirmation modals
                     window.inviteeData = inviteeData;
                     
+                    console.log('Loaded invitee data:', inviteeData);
+                    
+                    // Get the max guests from the data (handle both maxGuests and maxguests properties)
+                    const maxGuests = inviteeData.maxguests || inviteeData.maxGuests || 1;
+                    
                     // Update confirmation modals with max guests
-                    updateGuestCountOptions('ceremony', inviteeData.maxGuests);
-                    updateGuestCountOptions('celebration', inviteeData.maxGuests);
+                    updateGuestCountOptions('ceremony', maxGuests);
+                    updateGuestCountOptions('celebration', maxGuests);
                     
                     // Show guest count in confirmation text
-                    document.getElementById('ceremonyGuestCount').textContent = inviteeData.maxGuests;
-                    document.getElementById('celebrationGuestCount').textContent = inviteeData.maxGuests;
+                    document.getElementById('ceremonyGuestCount').textContent = maxGuests;
+                    document.getElementById('celebrationGuestCount').textContent = maxGuests;
                     
                     // Set invitee IDs in forms
                     document.getElementById('ceremonyInviteeId').value = inviteeId;
@@ -550,7 +767,13 @@
                 } catch (error) {
                     console.error('Error loading invitee data:', error);
                     // Handle error (e.g., show error message to user)
+                    alert('Error loading invitation data. Please try again later.');
                 }
+            } else {
+                console.warn('No invitee ID found in URL');
+                // Hide RSVP buttons or show generic message
+                document.querySelectorAll('.btn[onclick*="openModal(\'ceremonyConfirm\')"], .btn[onclick*="openModal(\'celebrationConfirm\')"]')
+                    .forEach(btn => btn.style.display = 'none');
             }
             
             // Start countdown
@@ -567,8 +790,11 @@
             const select = document.getElementById(`${eventType}AttendingCount`);
             select.innerHTML = ''; // Clear existing options
             
+            // Ensure maxGuests is a number and at least 1
+            const max = Math.max(1, parseInt(maxGuests) || 1);
+            
             // Add options from 1 to maxGuests
-            for (let i = 1; i <= maxGuests; i++) {
+            for (let i = 1; i <= max; i++) {
                 const option = document.createElement('option');
                 option.value = i;
                 option.textContent = i;

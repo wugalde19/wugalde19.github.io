@@ -1,7 +1,7 @@
 // API configuration - should match what's in the main site's api.js
 const API_CONFIG = {
     // Google Apps Script deployed as web app URL
-    baseUrl: 'https://script.google.com/macros/s/AKfycbyrxYiQOoOqV3VLiGsuM1EaqxiMxu4c1omm7EIPoKl8S3qTU7bH3kffBepGdawAqTY/exec',
+    baseUrl: 'https://script.google.com/macros/s/AKfycbwQIe_-jNSjRJW3VEIwWlv9MdvcCifhR3kKRmv_ES4GX6vbNFWf3TutjjcqO-pLe-e3/exec',
     
     // Sheets IDs
     sheetsIds: {
@@ -359,6 +359,11 @@ function saveInvitee(e) {
     const maxGuests = parseInt(document.getElementById('inviteeGuests').value);
     const notes = document.getElementById('inviteeNotes').value;
     
+    if (!name || !maxGuests) {
+        alert('Name and maximum guests are required.');
+        return;
+    }
+    
     // Show loading state
     const submitButton = e.target.querySelector('button[type="submit"]');
     const originalText = submitButton.textContent;
@@ -374,6 +379,8 @@ function saveInvitee(e) {
         notes
     };
     
+    console.log('Sending data to API:', data);
+    
     // Create a form to submit the data
     const form = document.createElement('form');
     form.setAttribute('method', 'post');
@@ -382,11 +389,13 @@ function saveInvitee(e) {
     
     // Add all data parameters as hidden inputs
     Object.entries(data).forEach(([key, value]) => {
-        const input = document.createElement('input');
-        input.setAttribute('type', 'hidden');
-        input.setAttribute('name', key);
-        input.setAttribute('value', value);
-        form.appendChild(input);
+        if (value !== undefined && value !== null) {
+            const input = document.createElement('input');
+            input.setAttribute('type', 'hidden');
+            input.setAttribute('name', key);
+            input.setAttribute('value', value);
+            form.appendChild(input);
+        }
     });
     
     // Create hidden iframe for submission
@@ -395,20 +404,43 @@ function saveInvitee(e) {
     iframe.style.display = 'none';
     document.body.appendChild(iframe);
     
-    // Handle response
-    iframe.onload = function() {
+    // Add content listener to get response from iframe
+    iframe.addEventListener('load', function() {
         try {
-            // Reset form and close modal
-            e.target.reset();
-            closeInviteeModal();
+            const iframeContent = iframe.contentDocument || iframe.contentWindow.document;
+            const responseText = iframeContent.body.innerText;
+            console.log('API Response:', responseText);
             
-            // Reload invitees list
-            loadInvitees();
-            
-            // Show success message
-            showSuccessMessage('inviteesTable', 'Invitado agregado exitosamente');
+            if (responseText) {
+                try {
+                    const response = JSON.parse(responseText);
+                    
+                    if (response.status === 'success') {
+                        // Reset form and close modal
+                        e.target.reset();
+                        closeInviteeModal();
+                        
+                        // Reload invitees list
+                        loadInvitees();
+                        
+                        // Show success message
+                        showSuccessMessage('inviteesTable', 'Invitado agregado exitosamente');
+                    } else {
+                        // Show error message
+                        console.error('Error from API:', response);
+                        showErrorMessage('inviteesTable', `Error: ${response.message || 'Error desconocido'}`);
+                    }
+                } catch (jsonError) {
+                    console.error('Error parsing JSON response:', jsonError, responseText);
+                    showErrorMessage('inviteesTable', 'Error al procesar la respuesta del servidor');
+                }
+            } else {
+                console.log('Empty response from server');
+                // Still try to reload data in case it worked
+                loadInvitees();
+            }
         } catch (error) {
-            console.error('Error saving invitee:', error);
+            console.error('Error handling iframe response:', error);
             showErrorMessage('inviteesTable', 'Error al guardar invitado. Por favor, intenta nuevamente.');
         } finally {
             // Reset button state
@@ -416,14 +448,16 @@ function saveInvitee(e) {
             submitButton.textContent = originalText;
             
             // Clean up
-            document.body.removeChild(iframe);
-            document.body.removeChild(form);
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+                document.body.removeChild(form);
+            }, 500);
         }
-    };
+    });
     
     // Handle errors
-    iframe.onerror = function() {
-        console.error('Error submitting form');
+    iframe.onerror = function(error) {
+        console.error('Error submitting form:', error);
         showErrorMessage('inviteesTable', 'Error al guardar invitado. Por favor, intenta nuevamente.');
         
         // Reset button state
