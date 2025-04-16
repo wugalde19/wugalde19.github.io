@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danny & Sofía - Admin</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .admin-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .guest-form {
+            background-color: var(--light-color);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background-color: var(--light-color);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .stat-card h3 {
+            margin-bottom: 5px;
+            color: var(--primary-color);
+        }
+        .stat-card .number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <h1>Danny & Sofía - Admin Panel</h1>
+        
+        <div class="dashboard">
+            <div class="stat-card">
+                <h3>Total Invitados</h3>
+                <div class="number" id="totalGuests">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Confirmados Ceremonia</h3>
+                <div class="number" id="ceremonyConfirmed">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Confirmados Celebración</h3>
+                <div class="number" id="celebrationConfirmed">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Canciones Sugeridas</h3>
+                <div class="number" id="songsSuggested">0</div>
+            </div>
+        </div>
+        
+        <div class="guest-form">
+            <h2>Agregar Nuevo Invitado</h2>
+            <form id="addGuestForm">
+                <div class="form-group">
+                    <label for="guestName">Nombre del Invitado/Familia</label>
+                    <input type="text" id="guestName" required>
+                </div>
+                <div class="form-group">
+                    <label for="maxGuests">Máximo de Invitados</label>
+                    <input type="number" id="maxGuests" value="2" min="1" max="10">
+                </div>
+                <button type="submit" class="btn btn-primary">Agregar Invitado</button>
+            </form>
+        </div>
+        
+        <div class="guest-list">
+            <h2>Lista de Invitados & Enlaces</h2>
+            <p>Envía estos enlaces a tus invitados:</p>
+            <table id="guestTable">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Máx. Invitados</th>
+                        <th>Enlace de Invitación</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="guestTableBody">
+                    <!-- Will be populated with guest data -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Your Google Apps Script Web App URL - replace with your deployed script URL
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyk6E-NTX81i9RTsKPlTrk_OX8B-ytUHnCiDzBczOBRgXNJRONKO4F1Y2fkVgJAMtxL/exec';
+        
+        // Function to load all guests
+        async function loadGuests() {
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getAllInvitees`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    const tbody = document.getElementById('guestTableBody');
+                    tbody.innerHTML = '';
+                    
+                    // Update total guests count
+                    document.getElementById('totalGuests').textContent = data.data.length;
+                    
+                    data.data.forEach(guest => {
+                        const baseUrl = window.location.origin + window.location.pathname.replace('admin.html', '');
+                        const inviteUrl = `${baseUrl}invitation.html?id=${guest.id}`;
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${guest.name}</td>
+                            <td>${guest.maxGuests}</td>
+                            <td>
+                                <a href="${inviteUrl}" target="_blank">Ver Invitación</a>
+                                <button class="btn btn-small" onclick="copyToClipboard('${inviteUrl}')">Copiar</button>
+                            </td>
+                            <td>${guest.status || 'Pendiente'}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    alert('Error cargando invitados: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error connecting to the server', error);
+                alert('Error conectando al servidor. Consulta la consola para más detalles.');
+            }
+        }
+        
+        // Function to load dashboard statistics
+        async function loadStats() {
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getDashboardStats`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    document.getElementById('ceremonyConfirmed').textContent = data.data.ceremonyConfirmed || 0;
+                    document.getElementById('celebrationConfirmed').textContent = data.data.celebrationConfirmed || 0;
+                    document.getElementById('songsSuggested').textContent = data.data.songsSuggested || 0;
+                }
+            } catch (error) {
+                console.error('Error loading stats', error);
+            }
+        }
+        
+        // Function to add a new guest
+        document.getElementById('addGuestForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('guestName').value;
+            const maxGuests = document.getElementById('maxGuests').value;
+            
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'createInvitee',
+                        name: name,
+                        maxGuests: parseInt(maxGuests)
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    alert('¡Invitado agregado exitosamente!');
+                    document.getElementById('guestName').value = '';
+                    document.getElementById('maxGuests').value = '2';
+                    loadGuests(); // Reload the guest list
+                } else {
+                    alert('Error agregando invitado: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error connecting to the server', error);
+                alert('Error conectando al servidor. Consulta la consola para más detalles.');
+            }
+        });
+        
+        // Function to copy invitation URL to clipboard
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('¡Enlace de invitación copiado al portapapeles!');
+            }).catch(err => {
+                console.error('No se pudo copiar el texto: ', err);
+            });
+        }
+        
+        // Load guests and stats when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadGuests();
+            loadStats();
+        });
+    </script>
+</body>
+</html> 

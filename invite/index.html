@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wedding Invitation</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="welcome-page">
+    <div class="welcome-container">
+        <div class="welcome-content">
+            <h1>Bienvenidos a la invitación de</h1>
+            
+            <div class="initials">
+                <span>D</span> <span>S</span>
+            </div>
+            
+            <h2>Danny & Sofía</h2>
+            
+            <p>La música de fondo es parte de la experiencia</p>
+            
+            <div class="welcome-buttons">
+                <a href="invitation.html?music=true" class="btn btn-primary">Ingresar con música</a>
+                <a href="invitation.html?music=false" class="btn btn-secondary">Ingresar sin música</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get URL parameters to dynamically load invitee information
+        const urlParams = new URLSearchParams(window.location.search);
+        const inviteeId = urlParams.get('id');
+        
+        // If invitee ID is present, store it for use in invitation page
+        if (inviteeId) {
+            localStorage.setItem('inviteeId', inviteeId);
+        }
+    </script>
+</body>
+</html> 

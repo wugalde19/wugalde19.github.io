@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wedding Invitation Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin-style.css">
+</head>
+<body>
+    <div class="admin-container">
+        <header class="admin-header">
+            <div class="logo">
+                <div class="initials">
+                    <span>D</span> <span>S</span>
+                </div>
+                <h1>Wedding Invitation Admin</h1>
+            </div>
+            <nav class="admin-nav">
+                <ul>
+                    <li><a href="#" class="active" data-tab="invitees">Invitados</a></li>
+                    <li><a href="#" data-tab="confirmations">Confirmaciones</a></li>
+                    <li><a href="#" data-tab="music">Sugerencias de Música</a></li>
+                    <li><a href="#" data-tab="settings">Configuración</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <main class="admin-content">
+            <!-- Invitees Tab -->
+            <div class="tab-content active" id="invitees">
+                <div class="admin-section">
+                    <h2>Gestión de Invitados</h2>
+                    <p>Administra tu lista de invitados y genera invitaciones.</p>
+                    
+                    <div class="action-bar">
+                        <button id="refreshInvitees" class="btn btn-secondary">
+                            <i class="fas fa-sync-alt"></i> Actualizar
+                        </button>
+                        <button id="addInvitee" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Nuevo Invitado
+                        </button>
+                        <div class="search-box">
+                            <input type="text" id="searchInvitees" placeholder="Buscar invitados...">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="data-table" id="inviteesTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre/Familia</th>
+                                    <th>Personas</th>
+                                    <th>Email</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be loaded dynamically -->
+                                <tr>
+                                    <td colspan="6" class="loading-message">Cargando invitados...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Confirmations Tab -->
+            <div class="tab-content" id="confirmations">
+                <div class="admin-section">
+                    <h2>Confirmaciones de Asistencia</h2>
+                    <p>Revisa quiénes han confirmado su asistencia a la ceremonia y celebración.</p>
+                    
+                    <div class="action-bar">
+                        <button id="refreshConfirmations" class="btn btn-secondary">
+                            <i class="fas fa-sync-alt"></i> Actualizar
+                        </button>
+                        <div class="search-box">
+                            <input type="text" id="searchConfirmations" placeholder="Buscar confirmaciones...">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div class="filter-dropdown">
+                            <select id="filterEventType">
+                                <option value="all">Todos los eventos</option>
+                                <option value="ceremony">Ceremonia</option>
+                                <option value="celebration">Celebración</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="summary-cards">
+                        <div class="summary-card">
+                            <div class="summary-icon">
+                                <i class="fas fa-church"></i>
+                            </div>
+                            <div class="summary-data">
+                                <h3>Ceremonia</h3>
+                                <div class="summary-count" id="ceremonyCount">0</div>
+                                <div class="summary-subtext">personas confirmadas</div>
+                            </div>
+                        </div>
+                        
+                        <div class="summary-card">
+                            <div class="summary-icon">
+                                <i class="fas fa-glass-cheers"></i>
+                            </div>
+                            <div class="summary-data">
+                                <h3>Celebración</h3>
+                                <div class="summary-count" id="celebrationCount">0</div>
+                                <div class="summary-subtext">personas confirmadas</div>
+                            </div>
+                        </div>
+                        
+                        <div class="summary-card">
+                            <div class="summary-icon">
+                                <i class="fas fa-envelope-open-text"></i>
+                            </div>
+                            <div class="summary-data">
+                                <h3>Total Respuestas</h3>
+                                <div class="summary-count" id="totalResponses">0</div>
+                                <div class="summary-subtext">invitados respondieron</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="data-table" id="confirmationsTable">
+                            <thead>
+                                <tr>
+                                    <th>Invitado</th>
+                                    <th>Evento</th>
+                                    <th>Asiste</th>
+                                    <th>Personas</th>
+                                    <th>Mensaje</th>
+                                    <th>Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be loaded dynamically -->
+                                <tr>
+                                    <td colspan="6" class="loading-message">Cargando confirmaciones...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Music Suggestions Tab -->
+            <div class="tab-content" id="music">
+                <div class="admin-section">
+                    <h2>Sugerencias de Música</h2>
+                    <p>Revisa las canciones sugeridas por tus invitados para la fiesta.</p>
+                    
+                    <div class="action-bar">
+                        <button id="refreshMusic" class="btn btn-secondary">
+                            <i class="fas fa-sync-alt"></i> Actualizar
+                        </button>
+                        <button id="exportPlaylist" class="btn btn-primary">
+                            <i class="fas fa-file-export"></i> Exportar Playlist
+                        </button>
+                        <div class="search-box">
+                            <input type="text" id="searchMusic" placeholder="Buscar canciones...">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="data-table" id="musicTable">
+                            <thead>
+                                <tr>
+                                    <th>Invitado</th>
+                                    <th>Canción</th>
+                                    <th>Artista</th>
+                                    <th>Comentario</th>
+                                    <th>Fecha</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be loaded dynamically -->
+                                <tr>
+                                    <td colspan="6" class="loading-message">Cargando sugerencias...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings Tab -->
+            <div class="tab-content" id="settings">
+                <div class="admin-section">
+                    <h2>Configuración</h2>
+                    <p>Configura los detalles del evento y los ajustes de la aplicación.</p>
+                    
+                    <div class="settings-grid">
+                        <div class="settings-card">
+                            <h3>Detalles del Evento</h3>
+                            <form id="eventDetailsForm">
+                                <div class="form-group">
+                                    <label for="coupleName">Nombres de la Pareja</label>
+                                    <input type="text" id="coupleName" value="Danny & Sofía">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="weddingDate">Fecha de la Boda</label>
+                                    <input type="date" id="weddingDate" value="2025-05-15">
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="ceremonyTime">Hora de la Ceremonia</label>
+                                        <input type="time" id="ceremonyTime" value="17:00">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="celebrationTime">Hora de la Celebración</label>
+                                        <input type="time" id="celebrationTime" value="20:00">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="ceremonyLocation">Lugar de la Ceremonia</label>
+                                    <input type="text" id="ceremonyLocation" value="Parroquia Nuestra Señora de Lujan">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="ceremonyAddress">Dirección de la Ceremonia</label>
+                                    <input type="text" id="ceremonyAddress" value="Av. Pergamino 203 - San José">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="celebrationLocation">Lugar de la Celebración</label>
+                                    <input type="text" id="celebrationLocation" value="Salon de fiestas Avril">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="celebrationAddress">Dirección de la Celebración</label>
+                                    <input type="text" id="celebrationAddress" value="Av. Los Reartes 12 - San José">
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">Guardar Detalles</button>
+                            </form>
+                        </div>
+                        
+                        <div class="settings-card">
+                            <h3>Google Sheets</h3>
+                            <form id="googleSheetsForm">
+                                <div class="form-group">
+                                    <label for="inviteesSheetId">ID de hoja de Invitados</label>
+                                    <input type="text" id="inviteesSheetId" placeholder="ID de Google Sheet">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="confirmationsSheetId">ID de hoja de Confirmaciones</label>
+                                    <input type="text" id="confirmationsSheetId" placeholder="ID de Google Sheet">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="musicSheetId">ID de hoja de Sugerencias de Música</label>
+                                    <input type="text" id="musicSheetId" placeholder="ID de Google Sheet">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="appsScriptUrl">URL de Apps Script</label>
+                                    <input type="text" id="appsScriptUrl" placeholder="URL de Apps Script desplegado">
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">Guardar Configuración</button>
+                            </form>
+                        </div>
+                        
+                        <div class="settings-card">
+                            <h3>Diseño de Invitación</h3>
+                            <form id="invitationDesignForm">
+                                <div class="form-group">
+                                    <label for="primaryColor">Color Primario</label>
+                                    <input type="color" id="primaryColor" value="#a87e6f">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="secondaryColor">Color Secundario</label>
+                                    <input type="color" id="secondaryColor" value="#d6b6a6">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="backgroundImage">Imagen de Fondo</label>
+                                    <input type="file" id="backgroundImage" accept="image/*">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="quote">Cita o Frase</label>
+                                    <textarea id="quote" rows="3">Todos somos mortales, hasta el primer beso y la segunda copa de vino</textarea>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">Guardar Diseño</button>
+                            </form>
+                        </div>
+                        
+                        <div class="settings-card">
+                            <h3>Detalles de Luna de Miel</h3>
+                            <form id="honeymoonDetailsForm">
+                                <div class="form-group">
+                                    <label for="honeymoonText">Texto de Luna de Miel</label>
+                                    <textarea id="honeymoonText" rows="4">También apreciaríamos enormemente cualquier contribución monetaria para nuestra luna de miel. Su apoyo nos ayudará a crear recuerdos inolvidables mientras comenzamos nuestra nueva vida juntos.</textarea>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="bankName">Nombre del Banco</label>
+                                    <input type="text" id="bankName" placeholder="Nombre del Banco">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="accountHolder">Titular de la Cuenta</label>
+                                    <input type="text" id="accountHolder" placeholder="Nombre del Titular">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="accountNumber">Número de Cuenta</label>
+                                    <input type="text" id="accountNumber" placeholder="Número de Cuenta">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="accountAlias">Alias</label>
+                                    <input type="text" id="accountAlias" placeholder="Alias de la Cuenta">
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">Guardar Detalles</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Modals -->
+    <!-- Add/Edit Invitee Modal -->
+    <div class="modal" id="inviteeModal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 id="inviteeModalTitle">Agregar Nuevo Invitado</h2>
+            
+            <form id="inviteeForm">
+                <input type="hidden" id="inviteeId">
+                
+                <div class="form-group">
+                    <label for="inviteeName">Nombre/Familia</label>
+                    <input type="text" id="inviteeName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="inviteeEmail">Email</label>
+                    <input type="email" id="inviteeEmail">
+                </div>
+                
+                <div class="form-group">
+                    <label for="inviteeGuests">Cantidad de Personas</label>
+                    <input type="number" id="inviteeGuests" min="1" value="2" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="inviteeNotes">Notas</label>
+                    <textarea id="inviteeNotes" rows="3"></textarea>
+                </div>
+                
+                <div class="form-buttons">
+                    <button type="button" class="btn btn-secondary" id="cancelInvitee">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Generate PDF Modal -->
+    <div class="modal" id="pdfModal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Generar PDF de Invitación</h2>
+            
+            <div class="pdf-loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Generando PDF de invitación...</p>
+            </div>
+            
+            <div class="pdf-success">
+                <i class="fas fa-check-circle"></i>
+                <p>¡PDF generado con éxito!</p>
+                <a href="#" id="pdfDownloadLink" class="btn btn-primary" target="_blank">Descargar PDF</a>
+            </div>
+            
+            <div class="pdf-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Error al generar PDF. Por favor, intenta nuevamente.</p>
+                <button id="retryPdf" class="btn btn-secondary">Reintentar</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/admin.js"></script>
+</body>
+</html> 

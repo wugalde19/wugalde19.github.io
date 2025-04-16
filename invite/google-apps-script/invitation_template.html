@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <title>Invitación de Boda - Danny y Sofía</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .invitation {
+            position: relative;
+            padding: 20px;
+            border: 2px solid #a87e6f;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #d6b6a6;
+        }
+        
+        .initials {
+            font-size: 36px;
+            margin: 20px 0;
+        }
+        
+        .initials span {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            line-height: 60px;
+            text-align: center;
+            border: 2px solid #a87e6f;
+            border-radius: 50%;
+            margin: 0 10px;
+        }
+        
+        h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: #a87e6f;
+        }
+        
+        h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #a87e6f;
+        }
+        
+        h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #a87e6f;
+        }
+        
+        .quote {
+            font-style: italic;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        
+        .invitee-name {
+            font-size: 22px;
+            margin: 20px 0;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #f9f7f6;
+            border-radius: 8px;
+        }
+        
+        .detail {
+            margin-bottom: 10px;
+        }
+        
+        .detail strong {
+            font-weight: bold;
+            color: #a87e6f;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .qr-code {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .qr-code img {
+            width: 150px;
+            height: 150px;
+        }
+        
+        .instructions {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f9f7f6;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .confirmation {
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        .confirmation-text {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .confirmation-url {
+            color: #a87e6f;
+            text-decoration: underline;
+        }
+        
+        .guest-count {
+            margin: 15px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="invitation">
+        <div class="header">
+            <div class="initials">
+                <span>D</span> <span>S</span>
+            </div>
+            <h1>Danny & Sofía</h1>
+            <p class="quote">"Todos somos mortales, hasta el primer beso y la segunda copa de vino"</p>
+        </div>
+        
+        <p class="invitee-name">
+            <? if (invitee.name) { ?>
+                <?= invitee.name ?>
+            <? } else { ?>
+                Estimado invitado
+            <? } ?>
+        </p>
+        
+        <p style="text-align: center; margin-bottom: 20px;">
+            Con alegría en nuestros corazones, les invitamos a compartir nuestro día especial.
+        </p>
+        
+        <? if (invitee.maxGuests && invitee.maxGuests > 1) { ?>
+            <p class="guest-count">
+                Invitación válida para <?= invitee.maxGuests ?> personas
+            </p>
+        <? } ?>
+        
+        <div class="section">
+            <h2>Ceremonia</h2>
+            <div class="detail"><strong>Día:</strong> <?= weddingDate ?></div>
+            <div class="detail"><strong>Hora:</strong> <?= ceremonyTime ?></div>
+            <div class="detail"><strong>Lugar:</strong> <?= ceremonyLocation ?></div>
+            <div class="detail"><strong>Dirección:</strong> <?= ceremonyAddress ?></div>
+        </div>
+        
+        <div class="section">
+            <h2>Celebración</h2>
+            <div class="detail"><strong>Día:</strong> <?= weddingDate ?></div>
+            <div class="detail"><strong>Hora:</strong> <?= celebrationTime ?></div>
+            <div class="detail"><strong>Lugar:</strong> <?= celebrationLocation ?></div>
+            <div class="detail"><strong>Dirección:</strong> <?= celebrationAddress ?></div>
+        </div>
+        
+        <div class="instructions">
+            <h3>Información Adicional</h3>
+            <p><strong>Dress Code:</strong> Formal / Semi-formal</p>
+            <p><strong>Estacionamiento:</strong> Disponible en el lugar</p>
+            <p><strong>Regalos:</strong> Si deseas hacernos un regalo, apreciaríamos una contribución para nuestra luna de miel.</p>
+        </div>
+        
+        <div class="confirmation">
+            <p class="confirmation-text">Por favor, confirma tu asistencia antes del 15 de Abril de 2025</p>
+            <p>Visita nuestra página web para confirmar tu asistencia:</p>
+            <p class="confirmation-url">https://wedding.example.com/invite?id=<?= invitee.id ?></p>
+            
+            <div class="qr-code">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://wedding.example.com/invite?id=<?= invitee.id ?>" alt="QR Code">
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Danny & Sofía - Sábado 15 de Mayo, 2025</p>
+        <p>Este PDF fue generado automáticamente por Wedding App</p>
+    </div>
+</body>
+</html> 

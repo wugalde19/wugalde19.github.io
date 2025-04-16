@@ -1,0 +1,492 @@
+<!-- 
+    IMPORTANT: For the ornamental borders to work, you need to upload the following images:
+    - images/corner-top-left.png - Top left corner decoration
+    - images/corner-top-right.png - Top right corner decoration
+    - images/corner-bottom-left.png - Bottom left corner decoration
+    - images/corner-bottom-right.png - Bottom right corner decoration
+    - images/border-top.png - Top horizontal border
+    - images/border-bottom.png - Bottom horizontal border
+    
+    These should be ornamental gold/bronze elements similar to those in the provided examples.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danny & Sofía - Wedding Invitation</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header Section -->
+    <header>
+        <div class="header-content">
+            <div class="initials">
+                <span>D</span> <span>S</span>
+            </div>
+            <h1 id="couple-names">Danny & Sofía</h1>
+            <p class="quote">"Todos somos mortales, hasta el primer beso y la segunda copa de vino"</p>
+        </div>
+    </header>
+
+    <!-- Countdown Section -->
+    <section id="countdown">
+        <div class="section-container">
+            <div class="ornamental-corner corner-top-left"></div>
+            <div class="ornamental-corner corner-top-right"></div>
+            <div class="ornamental-corner corner-bottom-left"></div>
+            <div class="ornamental-corner corner-bottom-right"></div>
+            <h2>Falta</h2>
+            <div class="countdown-timer">
+                <div class="countdown-item" id="months-container">
+                    <span id="months">00</span>
+                    <p>meses</p>
+                </div>
+                <div class="countdown-item">
+                    <span id="days">00</span>
+                    <p>días</p>
+                </div>
+                <div class="countdown-item">
+                    <span id="hours">00</span>
+                    <p>hs</p>
+                </div>
+                <div class="countdown-item">
+                    <span id="minutes">00</span>
+                    <p>min</p>
+                </div>
+                <div class="countdown-item">
+                    <span id="seconds">00</span>
+                    <p>seg</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Ceremony Section -->
+    <section id="ceremony">
+        <div class="section-container">
+            <div class="ornamental-corner corner-top-left"></div>
+            <div class="ornamental-corner corner-top-right"></div>
+            <div class="ornamental-corner corner-bottom-left"></div>
+            <div class="ornamental-corner corner-bottom-right"></div>
+            <h2>Ceremonia</h2>
+            <div class="event-details">
+                <div class="detail-item">
+                    <h3>Día</h3>
+                    <p>Sábado 15 de Mayo - 17hs</p>
+                    <button class="btn btn-small" onclick="addToCalendar('ceremony')">Agendar</button>
+                </div>
+                <div class="detail-item">
+                    <h3>Lugar</h3>
+                    <p>Parroquia Nuestra Señora de Lujan</p>
+                    <button class="btn btn-primary" onclick="openModal('ceremonyConfirm')">Confirmar asistencia</button>
+                </div>
+                <div class="detail-item">
+                    <h3>Dirección</h3>
+                    <p>Av. Pergamino 203 - San José</p>
+                    <div class="map-buttons">
+                        <a href="#" class="btn btn-small" onclick="openDirections('Parroquia Nuestra Señora de Lujan, Av. Pergamino 203, San José', 'google')"><i class="fab fa-google"></i> Google Maps</a>
+                        <a href="#" class="btn btn-small" onclick="openDirections('Parroquia Nuestra Señora de Lujan, Av. Pergamino 203, San José', 'waze')"><i class="fab fa-waze"></i> Waze</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Celebration Section -->
+    <section id="celebration">
+        <div class="section-container">
+            <div class="ornamental-corner corner-top-left"></div>
+            <div class="ornamental-corner corner-top-right"></div>
+            <div class="ornamental-corner corner-bottom-left"></div>
+            <div class="ornamental-corner corner-bottom-right"></div>
+            <h2>Celebración</h2>
+            <div class="event-details">
+                <div class="detail-item">
+                    <h3>Día</h3>
+                    <p>Sábado 15 de Mayo - 20hs</p>
+                    <button class="btn btn-small" onclick="addToCalendar('celebration')">Agendar</button>
+                </div>
+                <div class="detail-item">
+                    <h3>Lugar</h3>
+                    <p>Salon de fiestas Avril</p>
+                    <button class="btn btn-primary" onclick="openModal('celebrationConfirm')">Confirmar asistencia</button>
+                </div>
+                <div class="detail-item">
+                    <h3>Dirección</h3>
+                    <p>Av. Los Reartes 12 - San José</p>
+                    <div class="map-buttons">
+                        <a href="#" class="btn btn-small" onclick="openDirections('Salon de fiestas Avril, Av. Los Reartes 12, San José', 'google')"><i class="fab fa-google"></i> Google Maps</a>
+                        <a href="#" class="btn btn-small" onclick="openDirections('Salon de fiestas Avril, Av. Los Reartes 12, San José', 'waze')"><i class="fab fa-waze"></i> Waze</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gallery Section -->
+    <section id="gallery">
+        <div class="section-container">
+            <div class="ornamental-corner corner-top-left"></div>
+            <div class="ornamental-corner corner-top-right"></div>
+            <div class="ornamental-corner corner-bottom-left"></div>
+            <div class="ornamental-corner corner-bottom-right"></div>
+            <h2>Retratos de Nuestro Amor</h2>
+            <p>Un minuto, un segundo, un instante que queda en la eternidad</p>
+            <div class="gallery-container">
+                <!-- Images will be loaded dynamically -->
+                <div class="gallery-item" style="background-image: url('images/couple1.jpg');"></div>
+                <div class="gallery-item" style="background-image: url('images/couple2.jpg');"></div>
+                <div class="gallery-item" style="background-image: url('images/couple3.jpg');"></div>
+                <div class="gallery-item" style="background-image: url('images/couple4.jpg');"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Party Section -->
+    <section id="party">
+        <div class="section-container">
+            <div class="ornamental-corner corner-top-left"></div>
+            <div class="ornamental-corner corner-top-right"></div>
+            <div class="ornamental-corner corner-bottom-left"></div>
+            <div class="ornamental-corner corner-bottom-right"></div>
+            <h2>Fiesta</h2>
+            <p>Hagamos juntos una fiesta épica. Aquí algunos detalles a tener en cuenta.</p>
+            
+            <div class="party-details">
+                <div class="party-item">
+                    <i class="fas fa-music party-icon"></i>
+                    <h3>Música</h3>
+                    <p>¿Cuál es la canción que no debe faltar en la PlayList de la fiesta?</p>
+                    <button class="btn btn-secondary" onclick="openModal('musicSuggestion')">Sugerir canción</button>
+                </div>
+                
+                <div class="party-item">
+                    <i class="fas fa-tshirt party-icon"></i>
+                    <h3>Dress Code</h3>
+                    <p>Una orientación para tu vestuario</p>
+                    <button class="btn btn-secondary" onclick="openModal('dressCode')">Ver más</button>
+                </div>
+                
+                <div class="party-item">
+                    <i class="fas fa-info-circle party-icon"></i>
+                    <h3>Tips y Notas</h3>
+                    <p>Información adicional para tener en cuenta</p>
+                    <button class="btn btn-secondary" onclick="openModal('tips')">+ Info</button>
+                </div>
+                
+                <div class="party-item">
+                    <i class="fas fa-utensils party-icon"></i>
+                    <h3>Menú</h3>
+                    <p>Conoce las opciones gastronómicas de la celebración</p>
+                    <button class="btn btn-secondary" onclick="openModal('menu')">Ver menú</button>
+                </div>
+                
+                <div class="party-item">
+                    <i class="fas fa-champagne-glasses party-icon"></i>
+                    <h3>Brindis</h3>
+                    <p>No te pierdas el brindis especial a las 23:00hs</p>
+                </div>
+                
+                <div class="party-item">
+                    <i class="fas fa-child party-icon"></i>
+                    <h3>Área para niños</h3>
+                    <p>Contamos con espacio y actividades para los más pequeños</p>
+                    <button class="btn btn-secondary" onclick="openModal('kidsArea')">Más detalles</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gifts Section -->
+    <section id="gifts">
+        <div class="section-container">
+            <div class="ornamental-corner corner-top-left"></div>
+            <div class="ornamental-corner corner-top-right"></div>
+            <div class="ornamental-corner corner-bottom-left"></div>
+            <div class="ornamental-corner corner-bottom-right"></div>
+            <h2>Regalos</h2>
+            <p>Si deseas regalarnos algo más que tu hermosa presencia...</p>
+            <button class="btn btn-primary" onclick="openModal('giftsModal')">Ver más</button>
+        </div>
+    </section>
+
+    <!-- Social Media Section -->
+    <section id="social">
+        <div class="section-container">
+            <div class="ornamental-corner corner-top-left"></div>
+            <div class="ornamental-corner corner-top-right"></div>
+            <div class="ornamental-corner corner-bottom-left"></div>
+            <div class="ornamental-corner corner-bottom-right"></div>
+            <h2>Compartí este día con nosotros</h2>
+            <p>Compartí tus fotos y videos de este hermoso día</p>
+            <div class="social-options">
+                <div class="social-option">
+                    <h3>Instagram</h3>
+                    <div class="hashtag">#dannyysofia</div>
+                    <button class="btn btn-secondary" onclick="window.open('https://www.instagram.com/explore/tags/dannyysofia/', '_blank')">Ver en Instagram</button>
+                </div>
+                <div class="social-option">
+                    <h3>Google Photos</h3>
+                    <p>Escanea el código QR para subir fotos directamente a nuestro álbum</p>
+                    <div class="qr-container">
+                        <img src="images/google-photos-qr.png" alt="Google Photos QR" class="qr-code">
+                    </div>
+                    <button class="btn btn-secondary" onclick="openModal('photoUpload')">Instrucciones</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="initials">
+                <span>D</span> <span>S</span>
+            </div>
+            <h2>Danny & Sofía</h2>
+            <ul class="footer-links">
+                <li><a href="#" onclick="openModal('ceremonyConfirm')">Confirmar asistencia a ceremonia</a></li>
+                <li><a href="#" onclick="openModal('celebrationConfirm')">Confirmar asistencia a celebración</a></li>
+                <li><a href="#" onclick="openModal('musicSuggestion')">Sugerir canción</a></li>
+                <li><a href="#" onclick="addToCalendar('celebration')">Agendar Celebración</a></li>
+                <li><a href="#" onclick="addToCalendar('ceremony')">Agendar Ceremonia</a></li>
+            </ul>
+        </div>
+    </footer>
+
+    <!-- Modals -->
+    <!-- Ceremony Confirmation Modal -->
+    <div id="ceremonyConfirm" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('ceremonyConfirm')">&times;</span>
+            <h3>Confirmar Asistencia a Ceremonia</h3>
+            <form id="ceremonyConfirmForm">
+                <input type="hidden" id="ceremonyInviteeId" name="inviteeId">
+                <input type="hidden" id="ceremonyEventType" name="eventType" value="ceremony">
+                
+                <div class="form-group">
+                    <p>Confirmas tu asistencia para <span id="ceremonyGuestCount">0</span> personas?</p>
+                    <div class="attendance-selector">
+                        <button type="button" class="btn btn-primary" onclick="confirmAttendance('ceremony', true)">¡Sí, confirmo!</button>
+                        <button type="button" class="btn btn-secondary" onclick="confirmAttendance('ceremony', false)">No puedo :(</button>
+                    </div>
+                </div>
+                
+                <div id="ceremonyGuestDetails" class="form-group" style="display: none;">
+                    <label for="ceremonyAttendingCount">¿Cuántas personas asistirán?</label>
+                    <select id="ceremonyAttendingCount" name="attendingCount">
+                        <!-- Options will be populated dynamically based on max guests -->
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="ceremonyComment">Mensaje o buenos deseos</label>
+                    <textarea id="ceremonyComment" name="comment" rows="3"></textarea>
+                </div>
+                
+                <button type="button" class="btn btn-primary" onclick="submitConfirmation('ceremony')">Enviar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Celebration Confirmation Modal -->
+    <div id="celebrationConfirm" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('celebrationConfirm')">&times;</span>
+            <h3>Confirmar Asistencia a Celebración</h3>
+            <form id="celebrationConfirmForm">
+                <input type="hidden" id="celebrationInviteeId" name="inviteeId">
+                <input type="hidden" id="celebrationEventType" name="eventType" value="celebration">
+                
+                <div class="form-group">
+                    <p>Confirmas tu asistencia para <span id="celebrationGuestCount">0</span> personas?</p>
+                    <div class="attendance-selector">
+                        <button type="button" class="btn btn-primary" onclick="confirmAttendance('celebration', true)">¡Sí, confirmo!</button>
+                        <button type="button" class="btn btn-secondary" onclick="confirmAttendance('celebration', false)">No puedo :(</button>
+                    </div>
+                </div>
+                
+                <div id="celebrationGuestDetails" class="form-group" style="display: none;">
+                    <label for="celebrationAttendingCount">¿Cuántas personas asistirán?</label>
+                    <select id="celebrationAttendingCount" name="attendingCount">
+                        <!-- Options will be populated dynamically based on max guests -->
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="celebrationComment">Mensaje o buenos deseos</label>
+                    <textarea id="celebrationComment" name="comment" rows="3"></textarea>
+                </div>
+                
+                <button type="button" class="btn btn-primary" onclick="submitConfirmation('celebration')">Enviar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Music Suggestion Modal -->
+    <div id="musicSuggestion" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('musicSuggestion')">&times;</span>
+            <h3>Sugerir Canción</h3>
+            <form id="musicSuggestionForm">
+                <input type="hidden" id="musicInviteeId" name="inviteeId">
+                
+                <div class="form-group">
+                    <label for="songTitle">Título de la canción</label>
+                    <input type="text" id="songTitle" name="songTitle" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="artist">Artista</label>
+                    <input type="text" id="artist" name="artist" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="musicComment">Comentario (opcional)</label>
+                    <textarea id="musicComment" name="comment" rows="2"></textarea>
+                </div>
+                
+                <button type="button" class="btn btn-primary" onclick="submitMusicSuggestion()">Sugerir canción</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dress Code Modal -->
+    <div id="dressCode" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('dressCode')">&times;</span>
+            <h3>Dress Code</h3>
+            <div class="modal-text">
+                <p>Para esta ocasión especial, sugerimos:</p>
+                <p><strong>Caballeros:</strong> Traje formal o saco y corbata.</p>
+                <p><strong>Damas:</strong> Vestido de cóctel o conjunto elegante.</p>
+                <p>Los colores son libres, pero agradecemos evitar el blanco, reservado para la novia.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tips Modal -->
+    <div id="tips" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('tips')">&times;</span>
+            <h3>Tips y Notas</h3>
+            <div class="modal-text">
+                <ul>
+                    <li>La ceremonia comenzará puntualmente a las 17:00hs. Te recomendamos llegar con 15 minutos de anticipación.</li>
+                    <li>Habrá estacionamiento disponible en ambas locaciones.</li>
+                    <li>Si necesitas alojamiento, tenemos convenios con hoteles cercanos. Consultanos para más información.</li>
+                    <li>El servicio de transporte entre la ceremonia y la celebración estará disponible desde las 18:30hs.</li>
+                    <li>Si tienes alguna restricción alimentaria, por favor háganoslo saber antes del 1 de Mayo.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gifts Modal -->
+    <div id="giftsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('giftsModal')">&times;</span>
+            <h3>Regalos</h3>
+            <div class="modal-text">
+                <p>Contenido modal regalos</p>
+                <div class="honeymoon-gift">
+                    <h4>Luna de Miel</h4>
+                    <p>También apreciaríamos enormemente cualquier contribución monetaria para nuestra luna de miel. Su apoyo nos ayudará a crear recuerdos inolvidables mientras comenzamos nuestra nueva vida juntos.</p>
+                    <div class="bank-details">
+                        <h5>SINPE MOVIL Bancarios:</h5>
+                        <p>Banco: BAC San José</p>
+                        <p>Titular: Danny y Sofía</p>
+                        <p>Cuenta: XXXX-XXXX-XXXX-XXXX</p>
+                        <p>Alias: BODA.DANNY.SOFIA</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Photo Upload Instructions Modal -->
+    <div id="photoUpload" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('photoUpload')">&times;</span>
+            <h3>Cómo subir fotos a nuestro álbum</h3>
+            <div class="modal-text">
+                <ol>
+                    <li>Escanea el código QR con la cámara de tu teléfono</li>
+                    <li>Se abrirá un enlace a nuestro álbum compartido de Google Photos</li>
+                    <li>Inicia sesión con tu cuenta de Google (si no lo has hecho ya)</li>
+                    <li>Toca el botón "Añadir fotos" y selecciona las fotos que deseas compartir</li>
+                    <li>¡Listo! Tus fotos se añadirán automáticamente a nuestro álbum</li>
+                </ol>
+                <p>¡Gracias por compartir estos momentos especiales con nosotros!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menu Modal -->
+    <div id="menu" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('menu')">&times;</span>
+            <h3>Menú de la Celebración</h3>
+            <div class="modal-text">
+                <h4>Recepción</h4>
+                <p>Selección de bocadillos gourmet y champagne de bienvenida</p>
+                
+                <h4>Entrada</h4>
+                <p>Tabla de quesos y fiambres selectos</p>
+                
+                <h4>Plato Principal (a elección)</h4>
+                <ul>
+                    <li>Salmón rosado con salsa de eneldo y puré de papas</li>
+                    <li>Medallón de lomo con reducción de vino tinto y papas al romero</li>
+                    <li>Opción vegetariana: Risotto de hongos silvestres</li>
+                </ul>
+                
+                <h4>Postre</h4>
+                <p>Crème brûlée con frutas del bosque</p>
+                
+                <h4>Bebidas</h4>
+                <p>Vino tinto, vino blanco, cerveza, agua y refrescos</p>
+                
+                <h4>Mesa Dulce</h4>
+                <p>Variedad de postres y mesa de café</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kids Area Modal -->
+    <div id="kidsArea" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('kidsArea')">&times;</span>
+            <h3>Área para Niños</h3>
+            <div class="modal-text">
+                <p>Pensando en los más pequeños, hemos preparado:</p>
+                <ul>
+                    <li>Espacio dedicado con supervisión profesional</li>
+                    <li>Actividades y juegos durante toda la celebración</li>
+                    <li>Menú especial para niños</li>
+                    <li>Zona de descanso para los más pequeños</li>
+                </ul>
+                <p>El servicio está disponible para niños de 3 a 12 años.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio element for background music -->
+    <audio id="bgMusic" loop>
+        <source src="music/background-music.mp3" type="audio/mpeg">
+    </audio>
+    
+    <!-- Music control button - updated position -->
+    <button id="musicToggle" class="music-toggle">
+        <i class="fas fa-volume-up"></i>
+    </button>
+    
+    <!-- Scripts -->
+    <script src="js/main.js"></script>
+    <script src="js/api.js"></script>
+</body>
+</html> 
