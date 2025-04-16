@@ -5,9 +5,9 @@ const API_CONFIG = {
     
     // Sheets IDs
     sheetsIds: {
-        invitees: '1YOUR_INVITEES_SHEET_ID',
-        confirmations: '1YOUR_CONFIRMATIONS_SHEET_ID',
-        musicSuggestions: '1YOUR_MUSIC_SUGGESTIONS_SHEET_ID'
+        invitees: 'https://docs.google.com/spreadsheets/d/1qsYYCmNeu6Mv5n63W8i0cIYg6PItLvJOGPA1z0bHtYQ/edit?gid=0#gid=0',
+        confirmations: 'https://docs.google.com/spreadsheets/d/1qsYYCmNeu6Mv5n63W8i0cIYg6PItLvJOGPA1z0bHtYQ/edit?gid=1823484116#gid=1823484116',
+        musicSuggestions: 'https://docs.google.com/spreadsheets/d/1qsYYCmNeu6Mv5n63W8i0cIYg6PItLvJOGPA1z0bHtYQ/edit?gid=411775594#gid=411775594'
     }
 };
 
