@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wedding Invitation Admin Panel</title>
+    <link rel="stylesheet" href="css/admin-style.css">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">Wedding Invitation Admin</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="logout-btn">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="dashboard-welcome mb-4">
+                    <h2>Dashboard</h2>
+                    <p>Welcome to your wedding invitation admin panel. Here you can manage invitees, track RSVPs, and monitor music suggestions.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card dashboard-card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-church card-icon"></i>
+                        <h5 class="card-title">Ceremony Guests</h5>
+                        <h2 class="card-value" id="ceremony-count">Loading...</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card dashboard-card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-glass-cheers card-icon"></i>
+                        <h5 class="card-title">Celebration Guests</h5>
+                        <h2 class="card-value" id="celebration-count">Loading...</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card dashboard-card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-music card-icon"></i>
+                        <h5 class="card-title">Song Suggestions</h5>
+                        <h2 class="card-value" id="song-count">Loading...</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Invitee Management</h5>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addInviteeModal">
+                            <i class="fas fa-plus"></i> Add Invitee
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Max Guests</th>
+                                        <th>Status</th>
+                                        <th>Date Added</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invitees-table-body">
+                                    <tr>
+                                        <td colspan="5" class="text-center">Loading invitees...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Invitee Modal -->
+    <div class="modal fade" id="addInviteeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Invitee</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-invitee-form">
+                        <div class="mb-3">
+                            <label for="invitee-name" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="invitee-name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="max-guests" class="form-label">Maximum Guests</label>
+                            <input type="number" class="form-control" id="max-guests" min="1" value="2">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="save-invitee">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // API configuration
+        const API_CONFIG = {
+            baseUrl: 'https://script.google.com/macros/s/AKfycbzT7KkU1rzTCB7nGwGXjwC2maVpo--K7234EgXT4KoDh3s_f_0q0F7-cZyTmMkVUoVG/exec'
+        };
+
+        /**
+         * Helper function to load scripts via JSONP to bypass CORS restrictions
+         * @param {string} url - The URL to fetch
+         * @returns {Promise} - A promise that resolves with the data
+         */
+        function fetchJsonp(url) {
+            return new Promise((resolve, reject) => {
+                // Create a unique callback name
+                const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+                
+                // Create script element
+                const script = document.createElement('script');
+                
+                // Setup the callback function
+                window[callbackName] = function(data) {
+                    // Clean up: remove script and delete callback
+                    document.body.removeChild(script);
+                    delete window[callbackName];
+                    
+                    // Resolve the promise with data
+                    resolve(data);
+                };
+                
+                // Add callback parameter to URL
+                const jsonpUrl = url + (url.includes('?') ? '&' : '?') + 'callback=' + callbackName;
+                
+                // Setup script error handling
+                script.onerror = function() {
+                    // Clean up
+                    document.body.removeChild(script);
+                    delete window[callbackName];
+                    
+                    // Reject the promise
+                    reject(new Error('JSONP request failed'));
+                };
+                
+                // Set script attributes and append to DOM
+                script.src = jsonpUrl;
+                document.body.appendChild(script);
+            });
+        }
+
+        // Load stats for the dashboard
+        async function loadStats() {
+            try {
+                const result = await fetchJsonp(`${API_CONFIG.baseUrl}?action=getDashboardStats`);
+                
+                if (result.status === 'success') {
+                    document.getElementById('ceremony-count').textContent = result.data.ceremonyConfirmed;
+                    document.getElementById('celebration-count').textContent = result.data.celebrationConfirmed;
+                    document.getElementById('song-count').textContent = result.data.songsSuggested;
+                } else {
+                    throw new Error(result.message || 'Failed to load data');
+                }
+            } catch (error) {
+                console.error('Error loading stats', error);
+                document.getElementById('ceremony-count').textContent = 'Error';
+                document.getElementById('celebration-count').textContent = 'Error';
+                document.getElementById('song-count').textContent = 'Error';
+                alert('Error connecting to the server');
+            }
+        }
+
+        // Load invitees for the table
+        async function loadGuests() {
+            try {
+                const result = await fetchJsonp(`${API_CONFIG.baseUrl}?action=getAllInvitees`);
+                
+                if (result.status === 'success') {
+                    const tableBody = document.getElementById('invitees-table-body');
+                    tableBody.innerHTML = '';
+                    
+                    if (result.data && result.data.length > 0) {
+                        result.data.forEach(invitee => {
+                            const row = document.createElement('tr');
+                            
+                            // Format date
+                            let dateAdded = 'N/A';
+                            if (invitee.dateAdded) {
+                                const date = new Date(invitee.dateAdded);
+                                dateAdded = date.toLocaleDateString();
+                            }
+                            
+                            row.innerHTML = `
+                                <td>${invitee.name}</td>
+                                <td>${invitee.maxGuests}</td>
+                                <td><span class="badge ${invitee.status === 'Confirmado' ? 'bg-success' : 'bg-warning'}">${invitee.status}</span></td>
+                                <td>${dateAdded}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary copy-link-btn" data-id="${invitee.id}">
+                                        <i class="fas fa-copy"></i> Copy Link
+                                    </button>
+                                </td>
+                            `;
+                            
+                            tableBody.appendChild(row);
+                        });
+                        
+                        // Add event listeners to copy buttons
+                        document.querySelectorAll('.copy-link-btn').forEach(button => {
+                            button.addEventListener('click', function() {
+                                const inviteeId = this.getAttribute('data-id');
+                                const invitationLink = generateInvitationLink(inviteeId);
+                                copyToClipboard(invitationLink);
+                                
+                                // Show copied message
+                                const originalText = this.innerHTML;
+                                this.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                                setTimeout(() => {
+                                    this.innerHTML = originalText;
+                                }, 2000);
+                            });
+                        });
+                    } else {
+                        tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No invitees found</td></tr>';
+                    }
+                } else {
+                    throw new Error(result.message || 'Failed to load guests');
+                }
+            } catch (error) {
+                console.error('Error loading guests', error);
+                document.getElementById('invitees-table-body').innerHTML = 
+                    '<tr><td colspan="5" class="text-center text-danger">Error loading invitees</td></tr>';
+                alert('Error connecting to the server');
+            }
+        }
+
+        // Generate invitation link
+        function generateInvitationLink(inviteeId) {
+            return `https://wugalde19.github.io/wedding-invitation/invitation.html?id=${inviteeId}`;
+        }
+
+        // Copy text to clipboard
+        function copyToClipboard(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+        }
+
+        // Add new invitee
+        async function addInvitee(name, maxGuests) {
+            try {
+                // Create a unique ID for the iframe
+                const iframeId = 'iframe_add_invitee_' + Math.round(100000 * Math.random());
+                
+                // Create an invisible iframe
+                const iframe = document.createElement('iframe');
+                iframe.setAttribute('id', iframeId);
+                iframe.setAttribute('name', iframeId);
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+                
+                // Create a form to submit the data
+                const form = document.createElement('form');
+                form.setAttribute('method', 'post');
+                form.setAttribute('action', API_CONFIG.baseUrl);
+                form.setAttribute('target', iframeId);
+                
+                // Add action parameter
+                const actionInput = document.createElement('input');
+                actionInput.setAttribute('type', 'hidden');
+                actionInput.setAttribute('name', 'action');
+                actionInput.setAttribute('value', 'createInvitee');
+                form.appendChild(actionInput);
+                
+                // Add name parameter
+                const nameInput = document.createElement('input');
+                nameInput.setAttribute('type', 'hidden');
+                nameInput.setAttribute('name', 'name');
+                nameInput.setAttribute('value', name);
+                form.appendChild(nameInput);
+                
+                // Add maxGuests parameter
+                const maxGuestsInput = document.createElement('input');
+                maxGuestsInput.setAttribute('type', 'hidden');
+                maxGuestsInput.setAttribute('name', 'maxGuests');
+                maxGuestsInput.setAttribute('value', maxGuests);
+                form.appendChild(maxGuestsInput);
+                
+                // Append form to document
+                document.body.appendChild(form);
+                
+                return new Promise((resolve, reject) => {
+                    // Setup response handling
+                    iframe.onload = function() {
+                        setTimeout(() => {
+                            // Clean up
+                            document.body.removeChild(iframe);
+                            document.body.removeChild(form);
+                            
+                            // Reload guests list
+                            loadGuests();
+                            
+                            // Resolve with success
+                            resolve({ success: true });
+                        }, 1000);
+                    };
+                    
+                    // Handle errors
+                    iframe.onerror = function() {
+                        // Clean up
+                        document.body.removeChild(iframe);
+                        document.body.removeChild(form);
+                        
+                        reject(new Error('Failed to add invitee'));
+                    };
+                    
+                    // Submit the form
+                    form.submit();
+                });
+            } catch (error) {
+                console.error('Error adding invitee', error);
+                throw error;
+            }
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load initial data
+            loadStats();
+            loadGuests();
+            
+            // Save invitee button
+            document.getElementById('save-invitee').addEventListener('click', async function() {
+                const nameInput = document.getElementById('invitee-name');
+                const maxGuestsInput = document.getElementById('max-guests');
+                
+                if (!nameInput.value) {
+                    alert('Please enter a name');
+                    return;
+                }
+                
+                try {
+                    await addInvitee(nameInput.value, maxGuestsInput.value);
+                    
+                    // Reset form
+                    nameInput.value = '';
+                    maxGuestsInput.value = '2';
+                    
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addInviteeModal'));
+                    modal.hide();
+                    
+                    // Show success message
+                    alert('Invitee added successfully');
+                } catch (error) {
+                    alert('Error adding invitee: ' + error.message);
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

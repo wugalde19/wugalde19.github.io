@@ -21,79 +21,118 @@ function doGet(e) {
   const params = e.parameter;
   const action = params.action;
   const id = params.id;
+  const callback = params.callback; // For JSONP support
   
-  // Set up CORS headers for all domains (including GitHub Pages)
-  const output = ContentService.createTextOutput();
-  output.setMimeType(ContentService.MimeType.JSON);
-  
-  // Add proper CORS headers
-  output.setHeader('Access-Control-Allow-Origin', '*');
-  output.setHeader('Access-Control-Allow-Methods', 'GET');
-  output.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  // Create output content
+  let content;
   
   // Return appropriate data based on the action
   if (action === "getInvitee" && id) {
-    return getInviteeData(id, output);
+    content = getInviteeDataJson(id);
   } else if (action === "getAllInvitees") {
-    return getAllInvitees(output);
+    content = getAllInviteesJson();
   } else if (action === "getDashboardStats") {
-    return getDashboardStats(output);
+    content = getDashboardStatsJson();
+  } else {
+    // Default response if no valid action is specified
+    content = JSON.stringify({
+      status: "error",
+      message: "Invalid action"
+    });
   }
   
-  // Default response if no valid action is specified
-  return output.setContent(JSON.stringify({
-    status: "error",
-    message: "Invalid action"
-  }));
+  // Handle JSONP if callback is provided
+  if (callback) {
+    return ContentService.createTextOutput(callback + "(" + content + ")")
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  } else {
+    // Normal JSON response with CORS headers
+    const output = ContentService.createTextOutput(content);
+    output.setMimeType(ContentService.MimeType.JSON);
+    
+    // Add proper CORS headers
+    output.setHeader('Access-Control-Allow-Origin', '*');
+    output.setHeader('Access-Control-Allow-Methods', 'GET');
+    output.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    
+    return output;
+  }
 }
 
 // Handle POST requests (for form submissions)
 function doPost(e) {
   // Parse the request parameters and payload
   let params, data;
+  const callback = e.parameter.callback; // For JSONP support
   
   try {
-    params = e.parameter;
-    data = JSON.parse(e.postData.contents);
+    // Check if data is coming from form submit or JSON payload
+    if (e.postData && e.postData.contents) {
+      // Handle JSON data
+      data = JSON.parse(e.postData.contents);
+      params = e.parameter;
+    } else {
+      // Handle form-submitted data
+      data = e.parameter;
+      params = e.parameter;
+    }
   } catch (err) {
-    const errorOutput = ContentService.createTextOutput(JSON.stringify({
+    const errorContent = JSON.stringify({
       status: "error",
       message: "Invalid data format: " + err.message
-    })).setMimeType(ContentService.MimeType.JSON);
+    });
     
-    // Add CORS headers to error responses too
-    errorOutput.setHeader('Access-Control-Allow-Origin', '*');
-    errorOutput.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    errorOutput.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    
-    return errorOutput;
+    // Handle JSONP if callback is provided
+    if (callback) {
+      return ContentService.createTextOutput(callback + "(" + errorContent + ")")
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    } else {
+      const errorOutput = ContentService.createTextOutput(errorContent);
+      errorOutput.setMimeType(ContentService.MimeType.JSON);
+      
+      // Add CORS headers to error responses too
+      errorOutput.setHeader('Access-Control-Allow-Origin', '*');
+      errorOutput.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+      errorOutput.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+      
+      return errorOutput;
+    }
   }
   
   const action = data.action || params.action;
-  
-  // Set up CORS headers for all domains (including GitHub Pages)
-  const output = ContentService.createTextOutput();
-  output.setMimeType(ContentService.MimeType.JSON);
-  
-  // Add proper CORS headers
-  output.setHeader('Access-Control-Allow-Origin', '*');
-  output.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  output.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  let content;
   
   // Process based on the action
   if (action === "submitRSVP") {
-    return submitRSVP(data, output);
+    content = submitRSVPJson(data);
   } else if (action === "submitMusicSuggestion") {
-    return submitMusicSuggestion(data, output);
+    content = submitMusicSuggestionJson(data);
   } else if (action === "createInvitee") {
-    return createInvitee(data, output);
+    content = createInviteeJson(data);
+  } else {
+    // Default response if no valid action is specified
+    content = JSON.stringify({
+      status: "error",
+      message: "Invalid action"
+    });
   }
   
-  // Default response if no valid action is specified
-  return output.setContent(JSON.stringify({
-    status: "error",
-    message: "Invalid action"
-  }));
+  // Handle JSONP if callback is provided
+  if (callback) {
+    return ContentService.createTextOutput(callback + "(" + content + ")")
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  } else {
+    // Normal JSON response with CORS headers
+    const output = ContentService.createTextOutput(content);
+    output.setMimeType(ContentService.MimeType.JSON);
+    
+    // Add proper CORS headers
+    output.setHeader('Access-Control-Allow-Origin', '*');
+    output.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    output.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    
+    return output;
+  }
 }
 
 // Function to handle OPTIONS requests for CORS preflight
@@ -110,8 +149,8 @@ function doOptions(e) {
   return output.setContent(JSON.stringify({status: "success"}));
 }
 
-// Function to get invitee data by ID
-function getInviteeData(id, output) {
+// Function to get invitee data by ID as JSON string
+function getInviteeDataJson(id) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const inviteesSheet = ss.getSheetByName("Invitees");
   const data = inviteesSheet.getDataRange().getValues();
@@ -126,22 +165,22 @@ function getInviteeData(id, output) {
         maxGuests: data[i][2]
       };
       
-      return output.setContent(JSON.stringify({
+      return JSON.stringify({
         status: "success",
         data: invitee
-      }));
+      });
     }
   }
   
   // If no matching invitee found
-  return output.setContent(JSON.stringify({
+  return JSON.stringify({
     status: "error",
     message: "Invitee not found"
-  }));
+  });
 }
 
-// Function to get all invitees (for admin page)
-function getAllInvitees(output) {
+// Function to get all invitees (for admin page) as JSON string
+function getAllInviteesJson() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const inviteesSheet = ss.getSheetByName("Invitees");
   const data = inviteesSheet.getDataRange().getValues();
@@ -161,33 +200,14 @@ function getAllInvitees(output) {
     });
   }
   
-  return output.setContent(JSON.stringify({
+  return JSON.stringify({
     status: "success",
     data: invitees
-  }));
+  });
 }
 
-// Function to get the RSVP status of an invitee
-function getInviteeStatus(inviteeId) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const rsvpsSheet = ss.getSheetByName("RSVPs");
-  const data = rsvpsSheet.getDataRange().getValues();
-  
-  // Check if there are any RSVPs for this invitee
-  for (let i = 1; i < data.length; i++) {
-    if (data[i][1] === inviteeId) {
-      // If there's at least one "YES" to ceremony or celebration
-      if (data[i][3] === "YES") {
-        return "Confirmado";
-      }
-    }
-  }
-  
-  return "Pendiente";
-}
-
-// Function to get dashboard statistics
-function getDashboardStats(output) {
+// Function to get dashboard statistics as JSON string
+function getDashboardStatsJson() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const rsvpsSheet = ss.getSheetByName("RSVPs");
   const musicSheet = ss.getSheetByName("MusicSuggestions");
@@ -214,23 +234,23 @@ function getDashboardStats(output) {
   // Count music suggestions (subtract 1 for header row)
   const songsSuggested = musicData.length > 0 ? musicData.length - 1 : 0;
   
-  return output.setContent(JSON.stringify({
+  return JSON.stringify({
     status: "success",
     data: {
       ceremonyConfirmed,
       celebrationConfirmed,
       songsSuggested
     }
-  }));
+  });
 }
 
 // Function to submit an RSVP
-function submitRSVP(data, output) {
+function submitRSVPJson(data) {
   if (!data.inviteeId || !data.eventType) {
-    return output.setContent(JSON.stringify({
+    return JSON.stringify({
       status: "error",
       message: "Missing required data"
-    }));
+    });
   }
   
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -250,19 +270,19 @@ function submitRSVP(data, output) {
     new Date()
   ]);
   
-  return output.setContent(JSON.stringify({
+  return JSON.stringify({
     status: "success",
     message: "RSVP submitted successfully"
-  }));
+  });
 }
 
 // Function to submit a music suggestion
-function submitMusicSuggestion(data, output) {
+function submitMusicSuggestionJson(data) {
   if (!data.inviteeId || !data.songTitle || !data.artist) {
-    return output.setContent(JSON.stringify({
+    return JSON.stringify({
       status: "error",
       message: "Missing required data"
-    }));
+    });
   }
   
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -281,19 +301,19 @@ function submitMusicSuggestion(data, output) {
     new Date()
   ]);
   
-  return output.setContent(JSON.stringify({
+  return JSON.stringify({
     status: "success",
     message: "Music suggestion submitted successfully"
-  }));
+  });
 }
 
 // Function to create a new invitee
-function createInvitee(data, output) {
+function createInviteeJson(data) {
   if (!data.name) {
-    return output.setContent(JSON.stringify({
+    return JSON.stringify({
       status: "error",
       message: "Name is required"
-    }));
+    });
   }
   
   const maxGuests = data.maxGuests || 2;
@@ -312,11 +332,30 @@ function createInvitee(data, output) {
     new Date()
   ]);
   
-  return output.setContent(JSON.stringify({
+  return JSON.stringify({
     status: "success",
     data: { id },
     message: "Invitee created successfully"
-  }));
+  });
+}
+
+// Function to get the RSVP status of an invitee
+function getInviteeStatus(inviteeId) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const rsvpsSheet = ss.getSheetByName("RSVPs");
+  const data = rsvpsSheet.getDataRange().getValues();
+  
+  // Check if there are any RSVPs for this invitee
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][1] === inviteeId) {
+      // If there's at least one "YES" to ceremony or celebration
+      if (data[i][3] === "YES") {
+        return "Confirmado";
+      }
+    }
+  }
+  
+  return "Pendiente";
 }
 
 // Helper function to set up sheet headers if they don't exist
@@ -350,7 +389,7 @@ function setupSheets() {
 // Function to generate invitation link (for testing)
 function generateInvitationLink(inviteeId) {
   // Replace with your actual website URL when deployed
-  const baseUrl = "https://yourusername.github.io/wedding-invitation";
+  const baseUrl = "https://wugalde19.github.io/invite";
   return `${baseUrl}/invitation.html?id=${inviteeId}`;
 }
 

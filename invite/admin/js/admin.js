@@ -1,7 +1,7 @@
 // API configuration - should match what's in the main site's api.js
 const API_CONFIG = {
     // Google Apps Script deployed as web app URL
-    baseUrl: 'https://script.google.com/macros/s/AKfycbyBYnFttXUukTS_jR4fQroPzFTKL_K0xA8opxw62-_UderTt5fB8vGlfXpJNBRHE2z1/exec',
+    baseUrl: 'https://script.google.com/macros/s/AKfycbzT7KkU1rzTCB7nGwGXjwC2maVpo--K7234EgXT4KoDh3s_f_0q0F7-cZyTmMkVUoVG/exec',
     
     // Sheets IDs
     sheetsIds: {
