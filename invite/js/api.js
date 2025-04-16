@@ -12,7 +12,7 @@
 // API configuration
 const API_CONFIG = {
     // Google Apps Script deployed as web app URL
-    baseUrl: 'https://script.google.com/macros/s/AKfycbw70ICC3xz8_eht730jw8plwvpei85CDEToM8E3FYbGqyvAxsbcl4TO4x0s1dhsf_y1/exec',
+    baseUrl: 'https://script.google.com/macros/s/AKfycbz6DUpib9sKr4Tmbi3ftJXayfiHarSZ-c4jdfr6zluVuxNbWN6v4H_D2aueLA1CDM-V/exec',
     
     // Sheets IDs
     sheetsIds: {

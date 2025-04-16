@@ -94,16 +94,9 @@ function doPost(e) {
       return ContentService.createTextOutput(callback + "(" + errorContent + ")")
         .setMimeType(ContentService.MimeType.JAVASCRIPT);
     } else {
-      // Normal JSON response with CORS headers
-      const output = ContentService.createTextOutput(errorContent);
-      output.setMimeType(ContentService.MimeType.JSON);
-      
-      // Add proper CORS headers
-      output.setHeader('Access-Control-Allow-Origin', '*');
-      output.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-      output.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-      
-      return output;
+      // Normal JSON response with CORS headers (ContentService does not support setHeader, so only set MIME type)
+      return ContentService.createTextOutput(errorContent)
+        .setMimeType(ContentService.MimeType.JSON);
     }
   }
   
@@ -156,16 +149,9 @@ function doPost(e) {
       return ContentService.createTextOutput(callback + "(" + errorContent + ")")
         .setMimeType(ContentService.MimeType.JAVASCRIPT);
     } else {
-      // Normal JSON response with CORS headers
-      const output = ContentService.createTextOutput(errorContent);
-      output.setMimeType(ContentService.MimeType.JSON);
-      
-      // Add proper CORS headers
-      output.setHeader('Access-Control-Allow-Origin', '*');
-      output.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-      output.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-      
-      return output;
+      // Normal JSON response with CORS headers (ContentService does not support setHeader, so only set MIME type)
+      return ContentService.createTextOutput(errorContent)
+        .setMimeType(ContentService.MimeType.JSON);
     }
   }
 }
@@ -369,7 +355,8 @@ function submitMusicSuggestionJson(data) {
 // Function to create a new invitee
 function createInviteeJson(data) {
   try {
-    Logger.log("Creating new invitee with data: " + JSON.stringify(data));
+    // Log inputs for debugging
+    Logger.log("createInviteeJson called with data: " + JSON.stringify(data));
     
     // Check for required data
     if (!data || !data.name) {
@@ -381,23 +368,40 @@ function createInviteeJson(data) {
     }
     
     // Parse and validate data
-    const name = String(data.name);
+    const name = String(data.name).trim();
     const maxGuests = parseInt(data.maxGuests) || 2;
     const email = data.email || "";
     const notes = data.notes || "";
+    const debug = data.debug === "true"; // Check if debug mode is enabled
     
-    Logger.log("Validated data: name=" + name + ", maxGuests=" + maxGuests);
+    Logger.log("Validated data: name=" + name + ", maxGuests=" + maxGuests + ", debug=" + debug);
     
-    // Get spreadsheet and sheet
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    // Try to access the active spreadsheet or use provided ID
+    let ss;
+    if (data.spreadsheetId) {
+      try {
+        ss = SpreadsheetApp.openById(data.spreadsheetId);
+        Logger.log("Using provided spreadsheet ID: " + data.spreadsheetId);
+      } catch (e) {
+        Logger.log("Could not open spreadsheet with ID: " + data.spreadsheetId + ", error: " + e.toString());
+        // Fall back to active spreadsheet
+        ss = SpreadsheetApp.getActiveSpreadsheet();
+      }
+    } else {
+      ss = SpreadsheetApp.getActiveSpreadsheet();
+    }
+    
     if (!ss) {
-      Logger.log("Error: Could not access active spreadsheet");
+      Logger.log("Error: Could not access spreadsheet");
       return JSON.stringify({
         status: "error",
         message: "Could not access spreadsheet"
       });
     }
     
+    Logger.log("Successfully accessed spreadsheet: " + ss.getName());
+    
+    // Check if Invitees sheet exists, create if not
     let inviteesSheet = ss.getSheetByName("Invitees");
     if (!inviteesSheet) {
       Logger.log("Invitees sheet not found, creating sheet structure");
@@ -413,25 +417,57 @@ function createInviteeJson(data) {
       }
     }
     
+    Logger.log("Successfully accessed Invitees sheet");
+    
     // Generate a secure ID
     const id = generateSecureId(name);
     Logger.log("Generated secure ID: " + id);
+    
+    // Generate current date
     const dateAdded = new Date().toISOString();
     
     // Add the invitee to the sheet
     try {
-      inviteesSheet.appendRow([
-        id,
-        name,
-        maxGuests,
-        email,
-        notes,
-        dateAdded,
-        "pending" // Initial status
-      ]);
+      Logger.log("Attempting to append row to sheet");
+      // Get current data to determine proper columns
+      const headerRow = inviteesSheet.getRange(1, 1, 1, inviteesSheet.getLastColumn()).getValues()[0];
+      Logger.log("Header row: " + headerRow.join(", "));
+      
+      // Prepare row data based on headers
+      const rowData = [];
+      
+      // Required fields that must exist
+      rowData.push(id); // ID
+      rowData.push(name); // Name
+      rowData.push(maxGuests); // MaxGuests
+      
+      // Determine if we need to include email, notes, dateAdded, etc.
+      if (headerRow.includes("Email")) {
+        rowData.push(email);
+      }
+      if (headerRow.includes("Notes")) {
+        rowData.push(notes);
+      }
+      if (headerRow.includes("DateAdded")) {
+        rowData.push(dateAdded);
+      }
+      if (headerRow.includes("Status")) {
+        rowData.push("pending");
+      }
+      
+      Logger.log("Row data to append: " + rowData.join(", "));
+      inviteesSheet.appendRow(rowData);
       Logger.log("Successfully added row to sheet");
+      
+      // For debugging - log the data that was added
+      if (debug) {
+        Logger.log("DEBUGGING - Sheet data after append:");
+        const lastRow = inviteesSheet.getLastRow();
+        const actualRowData = inviteesSheet.getRange(lastRow, 1, 1, inviteesSheet.getLastColumn()).getValues()[0];
+        Logger.log("Actual row data: " + actualRowData.join(", "));
+      }
     } catch (appendError) {
-      Logger.log("Error appending row: " + appendError.toString());
+      Logger.log("Error appending row: " + appendError.toString() + "\nStack: " + appendError.stack);
       return JSON.stringify({
         status: "error",
         message: "Error adding invitee to spreadsheet: " + appendError.toString()
@@ -457,7 +493,7 @@ function createInviteeJson(data) {
       message: "Invitee created successfully"
     });
   } catch(error) {
-    Logger.log("Error creating invitee: " + error.toString() + "\n" + error.stack);
+    Logger.log("Error creating invitee: " + error.toString() + "\nStack: " + error.stack);
     return JSON.stringify({
       status: "error",
       message: "Failed to create invitee: " + error.toString()
@@ -527,20 +563,35 @@ function onOpen() {
       .addToUi();
 }
 
-/**
- * Generate a secure ID for an invitee
- * @param {string} name - The invitee's name
- * @returns {string} - A secure, encoded ID
- */
+// Generate a secure id based on the name and timestamp
 function generateSecureId(name) {
-  const timestamp = new Date().getTime();
-  const randomPart = Math.random().toString(36).substring(2, 8);
-  const namePart = name.toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 6);
-  const rawId = `${timestamp}-${namePart}-${randomPart}`;
-  
-  // Base64 encode and make URL safe
-  return Utilities.base64EncodeWebSafe(rawId)
-    .replace(/=+$/, ''); // Remove trailing equals
+  try {
+    // Create a base string combining name and timestamp
+    const timestamp = new Date().getTime();
+    const baseString = name.toLowerCase().replace(/[^a-z0-9]/g, '') + '-' + timestamp;
+    
+    // Create a hash-like value from the baseString
+    let hash = 0;
+    for (let i = 0; i < baseString.length; i++) {
+      const char = baseString.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    
+    // Convert to a positive number
+    hash = Math.abs(hash);
+    
+    // Convert to base36 (alphanumeric) and add a random suffix
+    const randomSuffix = Math.floor(Math.random() * 1000).toString(36);
+    const encodedId = hash.toString(36) + randomSuffix;
+    
+    // Ensure the ID is at least 6 characters long
+    return encodedId.length < 6 ? encodedId + randomSuffix.repeat(2) : encodedId;
+  } catch (error) {
+    Logger.log("Error generating secure ID: " + error.toString());
+    // Fallback to a simple encrypted timestamp if there's an error
+    return "inv" + new Date().getTime().toString(36);
+  }
 }
 
 /**

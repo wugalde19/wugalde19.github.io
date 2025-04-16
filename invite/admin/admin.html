@@ -181,7 +181,7 @@
     <script>
         // API configuration
         const API_CONFIG = {
-            baseUrl: 'https://script.google.com/macros/s/AKfycbw70ICC3xz8_eht730jw8plwvpei85CDEToM8E3FYbGqyvAxsbcl4TO4x0s1dhsf_y1/exec'
+            baseUrl: 'https://script.google.com/macros/s/AKfycbz6DUpib9sKr4Tmbi3ftJXayfiHarSZ-c4jdfr6zluVuxNbWN6v4H_D2aueLA1CDM-V/exec'
         };
 
         /**
@@ -334,6 +334,21 @@
             try {
                 console.log('Adding new invitee:', name, 'with max guests:', maxGuests);
                 
+                // Show a temporary message to the user
+                const messageDiv = document.createElement('div');
+                messageDiv.style.position = 'fixed';
+                messageDiv.style.top = '20px';
+                messageDiv.style.left = '50%';
+                messageDiv.style.transform = 'translateX(-50%)';
+                messageDiv.style.padding = '12px 20px';
+                messageDiv.style.borderRadius = '5px';
+                messageDiv.style.backgroundColor = '#007bff';
+                messageDiv.style.color = 'white';
+                messageDiv.style.zIndex = '10000';
+                messageDiv.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+                messageDiv.textContent = 'Saving invitee...';
+                document.body.appendChild(messageDiv);
+                
                 // Create a hidden iframe for submission
                 const iframeId = 'hidden_submit_frame_' + Date.now();
                 const iframe = document.createElement('iframe');
@@ -374,34 +389,75 @@
                 const generatedId = generateSecureId(name);
                 const invitationLink = generateInvitationLink(generatedId);
                 
+                // Add a debug parameter to make logging easier
+                const debugInput = document.createElement('input');
+                debugInput.type = 'hidden';
+                debugInput.name = 'debug';
+                debugInput.value = 'true';
+                form.appendChild(debugInput);
+                
+                // Add a direct spreadsheet ID to help with targeting
+                const spreadsheetIdInput = document.createElement('input');
+                spreadsheetIdInput.type = 'hidden';
+                spreadsheetIdInput.name = 'spreadsheetId';
+                // If you know your spreadsheet ID, uncomment and set it here:
+                // spreadsheetIdInput.value = '1Your-Spreadsheet-ID-Here';
+                form.appendChild(spreadsheetIdInput);
+                
                 // Append the form to the document body
                 document.body.appendChild(form);
                 console.log('Submitting form to URL:', API_CONFIG.baseUrl);
                 
                 return new Promise((resolve) => {
-                    // Set a timeout for form submission (5 seconds)
+                    // Set a timeout for form submission (10 seconds)
                     const timeoutId = setTimeout(() => {
-                        console.log('Form submission timed out');
-                        cleanup();
+                        console.log('Form submission timed out after 10 seconds');
+                        cleanup(false, "The server didn't respond in time. The invitee might have been created, but we couldn't confirm it.");
                         resolve({
                             success: true,
                             invitationLink: invitationLink
                         });
-                    }, 5000);
+                    }, 10000);
                     
                     // Handle iframe load event
                     iframe.onload = function() {
-                        console.log('Form submitted, response received');
-                        clearTimeout(timeoutId);
-                        cleanup();
-                        resolve({
-                            success: true,
-                            invitationLink: invitationLink
-                        });
+                        console.log('Form submitted, iframe loaded');
+                        try {
+                            // Just to check if the iframe loaded something
+                            console.log('Iframe contentWindow exists:', !!iframe.contentWindow);
+                            console.log('Iframe content loaded');
+                            clearTimeout(timeoutId);
+                            cleanup(true, "Invitee added successfully!");
+                            resolve({
+                                success: true,
+                                invitationLink: invitationLink
+                            });
+                        } catch (err) {
+                            console.log('Error reading iframe content (expected due to CORS):', err);
+                            clearTimeout(timeoutId);
+                            cleanup(true, "Invitee submitted, but we couldn't confirm success. Check if it appears in the list.");
+                            resolve({
+                                success: true,
+                                invitationLink: invitationLink
+                            });
+                        }
                     };
                     
-                    // Cleanup function
-                    function cleanup() {
+                    // Cleanup function with status message
+                    function cleanup(success, message) {
+                        // Update the message
+                        messageDiv.style.backgroundColor = success ? '#28a745' : '#dc3545';
+                        messageDiv.textContent = message;
+                        
+                        // Remove the message after a delay
+                        setTimeout(() => {
+                            try {
+                                document.body.removeChild(messageDiv);
+                            } catch (e) {
+                                console.error('Error removing message div:', e);
+                            }
+                        }, 5000);
+                        
                         // Remove the form and iframe
                         try {
                             document.body.removeChild(form);
@@ -419,6 +475,7 @@
                 });
             } catch (error) {
                 console.error('Error adding invitee:', error);
+                alert('Error adding invitee: ' + error.message);
                 throw error;
             }
         }
