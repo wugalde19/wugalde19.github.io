@@ -1,6 +1,20 @@
 // Google Apps Script for Wedding Invitation API
 // Copy this code into your Google Apps Script editor
 
+/**
+ * IMPORTANT DEPLOYMENT SETTINGS:
+ * 
+ * To fix CORS issues, you MUST deploy this script with these settings:
+ * 1. Click Deploy > New deployment
+ * 2. Select "Web app" as the deployment type
+ * 3. For "Execute as" select "Me" (your Google account)
+ * 4. For "Who has access" select "Anyone"
+ * 5. Enable "Execute as API executable"
+ * 6. Click "Deploy"
+ * 7. Copy the Web App URL
+ * 8. IMPORTANT: Make sure to re-deploy every time you make changes to the code
+ */
+
 // Set up a doGet function to handle GET requests
 function doGet(e) {
   // Parse the request parameters
@@ -8,9 +22,14 @@ function doGet(e) {
   const action = params.action;
   const id = params.id;
   
-  // Allow CORS for local development
+  // Set up CORS headers for all domains (including GitHub Pages)
   const output = ContentService.createTextOutput();
   output.setMimeType(ContentService.MimeType.JSON);
+  
+  // Add proper CORS headers
+  output.setHeader('Access-Control-Allow-Origin', '*');
+  output.setHeader('Access-Control-Allow-Methods', 'GET');
+  output.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   
   // Return appropriate data based on the action
   if (action === "getInvitee" && id) {
@@ -37,17 +56,29 @@ function doPost(e) {
     params = e.parameter;
     data = JSON.parse(e.postData.contents);
   } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({
+    const errorOutput = ContentService.createTextOutput(JSON.stringify({
       status: "error",
       message: "Invalid data format: " + err.message
     })).setMimeType(ContentService.MimeType.JSON);
+    
+    // Add CORS headers to error responses too
+    errorOutput.setHeader('Access-Control-Allow-Origin', '*');
+    errorOutput.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    errorOutput.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    
+    return errorOutput;
   }
   
   const action = data.action || params.action;
   
-  // Allow CORS for local development
+  // Set up CORS headers for all domains (including GitHub Pages)
   const output = ContentService.createTextOutput();
   output.setMimeType(ContentService.MimeType.JSON);
+  
+  // Add proper CORS headers
+  output.setHeader('Access-Control-Allow-Origin', '*');
+  output.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  output.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   
   // Process based on the action
   if (action === "submitRSVP") {
@@ -63,6 +94,20 @@ function doPost(e) {
     status: "error",
     message: "Invalid action"
   }));
+}
+
+// Function to handle OPTIONS requests for CORS preflight
+function doOptions(e) {
+  const output = ContentService.createTextOutput();
+  output.setMimeType(ContentService.MimeType.JSON);
+  
+  // Add CORS headers for preflight requests
+  output.setHeader('Access-Control-Allow-Origin', '*');
+  output.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  output.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  output.setHeader('Access-Control-Max-Age', '3600');
+  
+  return output.setContent(JSON.stringify({status: "success"}));
 }
 
 // Function to get invitee data by ID

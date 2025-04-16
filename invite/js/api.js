@@ -18,7 +18,14 @@ const API_CONFIG = {
  */
 async function getInviteeData(inviteeId) {
     try {
-        const response = await fetch(`${API_CONFIG.baseUrl}?action=getInvitee&id=${inviteeId}`);
+        const response = await fetch(`${API_CONFIG.baseUrl}?action=getInvitee&id=${inviteeId}`, {
+            method: 'GET',
+            mode: 'cors', // Explicitly set CORS mode
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
         const result = await response.json();
         
         if (result.status === 'success') {
@@ -41,8 +48,10 @@ async function submitConfirmationData(data) {
     try {
         const response = await fetch(`${API_CONFIG.baseUrl}`, {
             method: 'POST',
+            mode: 'cors', // Explicitly set CORS mode
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
             body: JSON.stringify({
                 action: 'submitRSVP',
@@ -76,8 +85,10 @@ async function submitMusicSuggestionData(data) {
     try {
         const response = await fetch(`${API_CONFIG.baseUrl}`, {
             method: 'POST',
+            mode: 'cors', // Explicitly set CORS mode
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
             body: JSON.stringify({
                 action: 'submitMusicSuggestion',
@@ -102,50 +113,42 @@ async function submitMusicSuggestionData(data) {
 }
 
 /**
- * Generate PDF version of the invitation
+ * Generate PDF invitation
  * @param {string} inviteeId - The ID of the invitee
- * @returns {Promise<string>} - URL to the generated PDF
+ * @returns {Promise<string>} - The URL of the generated PDF
  */
 async function generatePDF(inviteeId) {
     try {
-        console.log('Generating PDF for invitee:', inviteeId);
-        
-        // In a real implementation, this would make an API call to generate a PDF
-        // For demonstration purposes, we'll mock the response
-        
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Mock successful response
-        return {
-            success: true,
-            pdfUrl: 'invitations/invitation_' + inviteeId + '.pdf',
-            message: 'PDF generated successfully'
-        };
-        
-        // Actual implementation would look like this:
-        /*
         const response = await fetch(`${API_CONFIG.baseUrl}`, {
             method: 'POST',
+            mode: 'cors', // Explicitly set CORS mode
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
             body: JSON.stringify({
                 action: 'generatePDF',
                 inviteeId: inviteeId
-            }),
+            })
         });
         
-        const responseData = await response.json();
+        const result = await response.json();
         
-        if (responseData.error) {
-            throw new Error(responseData.error);
+        if (result.status === 'success' && result.pdfUrl) {
+            return result.pdfUrl;
+        } else {
+            throw new Error(result.message || 'Failed to generate PDF invitation');
         }
-        
-        return responseData;
-        */
     } catch (error) {
         console.error('Error generating PDF:', error);
         throw error;
     }
-} 
+}
+
+// Export the API functions
+export {
+    getInviteeData,
+    submitConfirmationData,
+    submitMusicSuggestionData,
+    generatePDF
+}; 
